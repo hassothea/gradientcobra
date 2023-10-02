@@ -10,8 +10,8 @@ setup(name='gradientcobra',
       description='Python implementation for Gradient COBRA: A kernel-based consensual aggregation for regression by S. Has (2023).',
       author=['Sothea Has'],
       author_email=['sothea.has@lpsm.paris'],
-      url='https://github.com/hassothea/gradientcobra',
-      packages=find_packages(where = "gradientcobra"),
+      url='https://github.com/hassothea/gradientcobra/',
+      packages=find_packages(where = "./gradientcobra"),
       install_requires=[
           'numpy',
           'pandas'
