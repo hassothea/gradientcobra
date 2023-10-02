@@ -5,7 +5,7 @@ from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 import logging
 
-from gradientcobra import GradientCOBRA
+from gradientcobra.gradientcobra import GradientCOBRA
 
 from sklearn.utils.estimator_checks import check_estimator
 
