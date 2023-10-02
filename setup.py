@@ -11,7 +11,7 @@ setup(name='gradientcobra',
       author=['Sothea Has'],
       author_email=['sothea.has@lpsm.paris'],
       url='https://github.com/hassothea/gradientcobra/',
-      packages=find_packages(where = "./gradientcobra"),
+      packages=find_packages(where = "gradientcobra"),
       install_requires=[
           'numpy',
           'pandas'
