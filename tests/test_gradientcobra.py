@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
 
+from gradientcobra.gradientcobra import GradientCOBRA
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
-from gradientcobra.gradientcobra import GradientCOBRA
 from sklearn.utils.estimator_checks import check_estimator
 import logging
 
