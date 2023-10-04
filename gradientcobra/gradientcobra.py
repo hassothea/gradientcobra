@@ -1,14 +1,18 @@
+# %load https://raw.githubusercontent.com/hassothea/AggregationMethods/main/GradientCOBRARegressor.py
+
+# Import all the libraries 
+# ========================
 
 # Import all the libraries 
 # ========================
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor, ExtraTreesRegressor
-from sklearn.linear_model import RidgeCV, LassoCV, BayesianRidge, SGDRegressor
+from sklearn.linear_model import RidgeCV, LassoCV, BayesianRidge, SGDRegressor, LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 from sklearn.utils import shuffle
-from sklearn.utils.validation import check_X_y
+from sklearn.utils.validation import check_X_y, check_array
 from scipy import spatial, optimize
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 # Plotting figures
@@ -19,6 +23,7 @@ from scipy.stats import gaussian_kde as kde
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
+import warnings
 
 class GradientCOBRA(BaseEstimator):
     def __init__(self, 
@@ -61,10 +66,10 @@ class GradientCOBRA(BaseEstimator):
             
             - optimize_params: (default is 'None') a dictionary of parameters of the optimization algorithm (both grid and grad). 
                 Its should contain some of the following keys:
-                - 'bandwidth_grid'  : a list of bandwidth parameters for grid search algorithm (default = np.linspace(0.00001, 100, 300))
+                - 'bandwidth_grid'  : a list of bandwidth parameters for grid search algorithm (default = np.linspace(0.00001, 10, 300))
                 - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-10))
-                - 'learning_rate'   : learning rate for grad algorithm (default = 0.1)
-                - 'speed'           : inceasing speed of the learning rate (default = 'linear'). It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
+                - 'learning_rate'   : learning rate for grad algorithm (default = 0.01)
+                - 'speed'           : inceasing speed of the learning rate (default = 'constant'). It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
                 - 'n_tries'         : the number of tries for selecting initial position of gradient descent algorithm (default = 5)
                 - 'start'           : the initial value of the bandwidth parameter (default = None)
                 - 'max_iter'        : maximum iteration of gradient descent algorithm (default = 300)
@@ -102,14 +107,79 @@ class GradientCOBRA(BaseEstimator):
             - optimize_bandwidth : the optimization method to estimate the optimal bendwidth parameter.
             - predict : for building prediction on the new observations using any given bendwidth or the estimated one.
             - plot_learning_curve : for plotting the graphic of learning algorithm (error vs parameter).
-
-
-
         """
-        opt_param = {'bandwidth_grid' : np.linspace(0.00001, 100, 300),
+
+        self.random_state = random_state
+        self.kernel = kernel
+        self.estimator_list = estimator_list
+        self.show_progress = show_progress
+        self.estimator_params = estimator_params
+        self.optimize_method = optimize_method
+        self.optimize_params = optimize_params
+        self.kernel_params = kernel_params
+        self.loss_weight = loss_weight
+        self.loss_function = loss_function
+        self.beta = beta
+
+    # List of kernel functions
+    def reverse_cosh(self, x, y):
+        return 1/np.cosh(-x*(y/self.kernel_params_['sigma']))
+        
+    def exponential(self, x, y):
+        return np.exp(-y*(x/self.kernel_params_['sigma']) ** self.kernel_params_['alpha'])
+
+    def radial(self, x, y):
+        return np.exp(-x*y/self.kernel_params_['sigma'])
+        
+    def epanechnikov(self, x, y):
+        return (1 - x*y/self.kernel_params_['sigma']) * (x*y/self.kernel_params_['sigma'] < 1)
+        
+    def biweight(self, x, y):
+        return (1-x*y/self.kernel_params_['sigma']) ** 2 * (x*y/self.kernel_params_['sigma'] < 1)
+        
+    def triweight(self, x, y):
+        return (1-x*y/self.kernel_params_['sigma']) ** 3 * (x*y/self.kernel_params_['sigma'] < 1)
+        
+    def triangular(self, x, y):
+        return (1-np.abs(x*y/self.kernel_params_['sigma'])) * (x*y/self.kernel_params_['sigma'] < 1)
+        
+    def naive(self, x, y):
+        return np.array(x*y/self.kernel_params_['sigma'])
+        
+    def cauchy(self, x, y):
+        return 1/(1 + np.array(x*y/self.kernel_params_['sigma']))
+    
+    # List of loss functions
+    def mse(self, y_true, pred, id = None):
+        return mean_squared_error(y_true, pred)
+    def mae(self, y_true, pred, id = None):
+        return mean_absolute_error(y_true, pred)
+    def mape(self, y_true, pred, id = None):
+        return mean_absolute_percentage_error(y_true, pred)
+    def wgt_mse(self, y_true, pred, id = None):
+        w_err2 = np.dot(self.loss_weight_[id], (y_true - pred) ** 2)/(np.dot(self.loss_weight_[id], y_true) ** 2)
+        return w_err2
+    def loss_func(self, y_true, pred, id = None):
+        return self.loss_function(y_true, pred)
+
+    def fit(self, X, y, split = .5, overlap = 0, X_k = None, y_k = None, X_l = None, y_l = None, as_predictions = False):
+        X, y = check_X_y(X, y)
+        if X.dtype == object:
+            X = X.astype(np.float64)
+        if y.dtype == object:
+            y = y.astype(np.float64)
+        self.X_ = X
+        self.y_ = y
+        self.normalize_constant = 10 / np.abs(np.max(y))
+        self.X_k_, self.X_l_ = X_k, X_l
+        self.y_k_, self.y_l_ = y_k, y_l
+        self.as_predictions = as_predictions
+        self.basic_estimtors = {}
+
+        opt_param = {'bandwidth_grid' : np.linspace(0.00001, 10, 300),
                      'epsilon' : 10 ** (-10),
                      'learning_rate' : 0.1,
-                     'speed' : 'linear',
+                     'speed' : 'constant',
                      'n_tries' : int(5),
                      'start' : None,
                      'max_iter' : 300,
@@ -123,113 +193,85 @@ class GradientCOBRA(BaseEstimator):
         }
         
         # Set optional parameters
-        if optimize_params is not None:
-            for obj in optimize_params:
-                opt_param[obj] = optimize_params[obj]
-        if kernel_params is not None:
-            for obj in kernel_params:
-                kernel_param[obj] = kernel_params[obj]
-        if kernel not in ['radial', 'gaussian', 'exponential', 'reverse_cosh']:
-            optimize_method = 'grid'
-        
-        self.random_state = random_state
-        self.kernel = kernel
-        self.estimator_list = estimator_list
-        self.show_progress = show_progress
-        self.estimator_params = estimator_params
-        self.optimize_method = optimize_method
-        self.optimize_params = opt_param
-        self.kernel_params = kernel_param
-        self.loss_weight = loss_weight
-        self.beta = beta
+        if self.optimize_params is not None:
+            for obj in self.optimize_params:
+                opt_param[obj] = self.optimize_params[obj]
+        self.optimize_params_ = opt_param
+        if self.kernel_params is not None:
+            for obj in self.kernel_params:
+                kernel_param[obj] = self.kernel_params[obj]
+        self.kernel_params_ = kernel_param
 
-        # Loss function
-        if (loss_function is None) or (loss_function == 'mse') or (loss_function == 'mean_squared_error'):
-            def mse(y_true, pred, id = None):
-                return mean_squared_error(y_true, pred)
-            self.loss_function = mse
-        elif (loss_function == 'mae') or (loss_function == 'mean_absolute_error'):
-            def mae(y_true, pred, id = None):
-                return mean_absolute_error(y_true, pred)
-            self.loss_function = mae
-        elif (loss_function == "mape") or (loss_function == 'mean_absolute_percentage_error'):
-            def mape(y_true, pred, id = None):
-                return mean_absolute_percentage_error(y_true, pred)
-            self.loss_function = mape
-        elif (loss_function == 'weighted_mse') or (loss_function == 'weighted_mean_squared_error'):
-            self.loss_function = None
+        self.optimize_method_ = self.optimize_method
+        if self.kernel not in ['radial', 'gaussian', 'exponential', 'reverse_cosh']:
+            self.optimize_method_ = 'grid'
 
-        if callable(loss_function):
-            def new_loss(y_true, pred, id = None):
-                return loss_function(y_true, pred)
-            self.loss_function = new_loss
-        
-        list_kernels = {
-            'reverse_cosh' : lambda x,y: 1/np.cosh(-x*(y/self.kernel_params['sigma'])),
-            'exponential' : lambda x,y: np.exp(-y*(x/self.kernel_params['sigma']) ** self.kernel_params['alpha']),
-            'gaussian' : lambda x,y: np.exp(-x*y/self.kernel_params['sigma']),
-            'radial' : lambda x,y: np.exp(-x*y/self.kernel_params['sigma']),
-            'epanechnikov' : lambda x,y: (1 - x*y/self.kernel_params['sigma']) * (x*y/self.kernel_params['sigma'] < 1),
-            'biweight' : lambda x,y: (1-x*y/self.kernel_params['sigma']) ** 2 * (x*y/self.kernel_params['sigma'] < 1),
-            'triweight' : lambda x,y: (1-x*y/self.kernel_params['sigma']) ** 3 * (x*y/self.kernel_params['sigma'] < 1),
-            'triangular' : lambda x,y: (1-np.abs(x*y/self.kernel_params['sigma'])) * (x*y/self.kernel_params['sigma'] < 1),
-            'cobra' : lambda x,y: np.array(x*y/self.kernel_params['sigma']),
-            'naive' : lambda x,y: np.array(x*y/self.kernel_params['sigma']),
-            'cauchy' : lambda x,y: 1/(1 + np.array(x*y/self.kernel_params['sigma']))
+        self.list_kernels = {
+            'reverse_cosh' : self.reverse_cosh,
+            'exponential' : self.exponential,
+            'gaussian' : self.radial,
+            'radial' : self.radial,
+            'epanechnikov' : self.epanechnikov,
+            'biweight' : self.biweight,
+            'triweight' : self.triweight,
+            'triangular' : self.triangular,
+            'cobra' : self.naive,
+            'naive' : self.naive,
+            'cauchy' : self.cauchy
         }
-        self.list_kernels = list_kernels
 
-    def fit(self, X, y, split = .5, overlap = 0, X_k = None, y_k = None, X_l = None, y_l = None, as_predictions = False):
-        X_ = X.copy()
-        if not isinstance(X, pd.core.frame.DataFrame):
-            X_ = pd.DataFrame(X)
-        self.X_ = X_
-        self.y_ = y
-        self.normalize_constant = 1 / np.abs(np.mean(y))
-        self.X_k_, self.X_l_ = X_k, X_l
-        self.y_k_, self.y_l_ = y_k, y_l
-        self.as_predictions = as_predictions
-        self.basic_estimtors = {}
-        if self.loss_function is None:
+        ### Need to be pickled =========================================================================================
+        # Loss function
+        if (self.loss_function is None) or (self.loss_function == 'mse') or (self.loss_function == 'mean_squared_error'):
+            self.loss = self.mse
+        elif (self.loss_function == 'mae') or (self.loss_function == 'mean_absolute_error'):
+            self.loss = self.mae
+        elif (self.loss_function == "mape") or (self.loss_function == 'mean_absolute_percentage_error'):
+            self.loss = self.mape
+        elif (self.loss_function == 'weighted_mse') or (self.loss_function == 'weighted_mean_squared_error'):
             if self.loss_weight is None:
                 pdf = kde(self.y_)(self.y_)
                 wgt = 1/pdf
                 wgt /= np.sum(wgt)
-                self.loss_weight = wgt
-            def new_loss(y_true, pred, id = None):
-                w_err2 = np.dot(self.loss_weight[id], (y_true - pred) ** 2)/(np.dot(self.loss_weight[id], y_true) ** 2)
-                return w_err2
-            self.loss_function = new_loss
+                self.loss_weight_ = wgt
+            else:
+                self.loss_weight_ = self.loss_weight
+            self.loss = self.wgt_mse
+
+        if callable(self.loss_function):
+            self.loss = self.loss_func
             
         if not as_predictions:
             self.split_data(split = split, overlap=overlap)
             self.build_baisc_estimators()
             self.load_predictions()
-            self.optimize_bandwidth(params = self.optimize_params)
+            self.optimize_bandwidth(params = self.optimize_params_)
         else:
-            self.pred_X_l = pd.DataFrame(X)
-            self.estimator_names = X.dtype.names
+            self.pred_X_l = X * self.normalize_constant
             self.number_estimators = X.shape[1]
-            self.X_l_ = pd.DataFrame(X)
+            self.X_l_ = X * self.normalize_constant
             self.y_l_ = y
-            self.optimize_bandwidth(params = self.optimize_params)
+            self.optimize_bandwidth(params = self.optimize_params_)
         return self
     
     def split_data(self, split, overlap, k = None, shuffle_data = True):
         if shuffle_data:
-            self.X_, self.y_ = shuffle(self.X_, self.y_, random_state = self.random_state)
+            self.shuffled_index = shuffle(range(len(self.y_)), random_state=self.random_state)
         if k is None:
             k1 = int(len(self.y_) * (split-overlap/2))
             k2 = int(len(self.y_) * (split+overlap/2))
-        self.X_k_, self.X_l_ = self.X_.iloc[:k2,:], self.X_.iloc[k1:,:]
-        self.y_k_, self.y_l_ = self.y_[:k2], self.y_[k1:]
+        self.iloc_k = np.array(self.shuffled_index[:k2], dtype = np.int64)
+        self.iloc_l = np.array(self.shuffled_index[k1:], dtype = np.int64)
+        self.X_k_, self.X_l_ = self.X_[self.iloc_k,:], self.X_[self.iloc_l,:]
+        self.y_k_, self.y_l_ = self.y_[self.iloc_k], self.y_[self.iloc_l]
         return self
 
     def build_baisc_estimators(self):
         all_estimators = {
+            'linear_regression' : LinearRegression(),
             'extra_trees' : ExtraTreesRegressor(random_state=self.random_state),
             'knn' : KNeighborsRegressor(),
-            'lasso' : LassoCV(),
+            'lasso' : LassoCV(random_state=self.random_state),
             'ridge' : RidgeCV(),
             'tree' : DecisionTreeRegressor(random_state=self.random_state),
             'random_forest' : RandomForestRegressor(random_state=self.random_state),
@@ -243,18 +285,17 @@ class GradientCOBRA(BaseEstimator):
         if self.estimator_list == "all":
             estimator_dict = all_estimators
         elif self.estimator_list is None:
-            estimator_dict = {'knn' : KNeighborsRegressor(),
-                              'lasso' : LassoCV(),
+            estimator_dict = {'linear_regression' : LinearRegression(),
+                              'lasso' : LassoCV(random_state=self.random_state),
                               'ridge' : RidgeCV(),
                               'tree' : DecisionTreeRegressor(random_state=self.random_state),
-                              'random_forest' : RandomForestRegressor(random_state=self.random_state),
-                              'extra_trees' : ExtraTreesRegressor(random_state=self.random_state),
-                              'svm' : SVR()}
+                              'random_forest' : RandomForestRegressor(random_state=self.random_state)}
         else:
             for name in self.estimator_list:
                 estimator_dict[name] = all_estimators[name]
         self.estimator_names = list(estimator_dict.keys())
         param_dict = {
+            'linear_regression' : None,
             'knn' : None,
             'lasso' : None,
             'ridge' : None,
@@ -276,7 +317,7 @@ class GradientCOBRA(BaseEstimator):
                 mod = estimator_dict[machine]
                 if param_dict[machine] is not None:
                     if machine == 'adaboost':
-                        mod.estimator = DecisionTreeRegressor()
+                        mod.estimator = DecisionTreeRegressor(random_state=self.random_state)
                         param_ = {}
                         for p_ in mod.estimator.get_params():
                             if p_ in list(param_dict[machine].keys()):
@@ -294,15 +335,20 @@ class GradientCOBRA(BaseEstimator):
     def load_predictions(self):
         self.pred_features = {}
         for machine in self.estimator_names:
-            self.pred_features[machine] = self.basic_estimators[machine].predict(self.X_l_)
+            self.pred_features[machine] = self.basic_estimators[machine].predict(self.X_l_) * self.normalize_constant
         self.pred_X_l = pd.DataFrame(self.pred_features)
         self.number_estimators = len(self.estimator_names)
         return self
     
     def distances(self, x, pred_test = None, p = 2):
         if pred_test is None:
-            ids = pd.DataFrame({'shuffle': list(range(self.optimize_params['n_cv']))})
-            self.shuffled_index_cv = ids.sample(x.shape[0], replace=True).shuffle.values
+            ids = np.array(range(self.optimize_params_['n_cv']))
+            size_each = x.shape[0] // self.optimize_params_['n_cv']
+            size_remain = x.shape[0] - size_each * self.optimize_params_['n_cv']
+            self.shuffled_index_cv = shuffle(
+                np.concatenate([np.repeat(ids, size_each), np.random.choice(ids, size_remain)]),
+                random_state=self.random_state
+            ) 
             if p != 0:
                 self.distance_matrix = spatial.distance_matrix(x,x,p) ** 2
             else:
@@ -322,23 +368,29 @@ class GradientCOBRA(BaseEstimator):
     def kappa_cross_validation_error(self, bandwidth = 1):
         list_kernels = self.list_kernels
         if self.kernel in ['cobra', 'naive']:
-            cost = np.full((self.optimize_params['n_cv'], self.number_estimators+1), fill_value = np.float64)
+            cost = np.full((self.optimize_params_['n_cv'], self.number_estimators+1), fill_value = np.float32)
             for m in range(self.number_estimators+1):
-                for i in range(self.optimize_params['n_cv']):
-                    D_k = (list_kernels[self.kernel](self.distance_matrix[self.shuffled_index_cv != i,:][:,self.shuffled_index_cv == i], bandwidth) <= m/self.number_estimators)
-                    D_k_ = np.sum(D_k, axis=0, dtype=np.float64)
-                    D_k_[D_k_ == 0] = np.Inf
+                for i in range(self.optimize_params_['n_cv']):
+                    D_k = 1*(list_kernels[self.kernel](self.distance_matrix[self.shuffled_index_cv != i,:][:,self.shuffled_index_cv == i], bandwidth) <= m/self.number_estimators)
+                    D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
+                    D_k_[D_k_ == 0 | np.isnan(D_k_)] = np.Inf
                     res = np.matmul(self.y_l_[self.shuffled_index_cv != i], D_k)/D_k_
-                    cost[i,self.number_estimators-m] = self.loss_function(self.y_l_[self.shuffled_index_cv == i], res, id = self.X_l_.loc[self.shuffled_index_cv == i,:].index)
+                    res[np.isnan(res)] = 0
+                    cost[i, self.number_estimators-m] = self.loss(self.y_l_[self.shuffled_index_cv == i], res, id = self.iloc_l[self.shuffled_index_cv == i])
             cost_ = cost.mean(axis=0)
         else:
-            cost = np.full(self.optimize_params['n_cv'], fill_value = np.float64)
-            for i in range(self.optimize_params['n_cv']):
+            cost = np.full(self.optimize_params_['n_cv'], fill_value = np.float32)
+            for i in range(self.optimize_params_['n_cv']):
                 D_k = list_kernels[self.kernel](self.distance_matrix[self.shuffled_index_cv != i,:][:,self.shuffled_index_cv == i], bandwidth)
-                D_k_ = np.sum(D_k, axis=0, dtype=np.float64)
-                D_k_[D_k_ == 0] = np.Inf
+                D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
+                D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.Inf
                 res = np.matmul(self.y_l_[self.shuffled_index_cv != i], D_k)/D_k_
-                cost[i] = self.loss_function(self.y_l_[self.shuffled_index_cv == i], res, id = self.X_l_.loc[self.shuffled_index_cv == i,:].index)
+                res[np.isnan(res)] = 0
+                temp = self.loss(self.y_l_[self.shuffled_index_cv == i], res, id = self.iloc_l[self.shuffled_index_cv == i])
+                if np.isnan(temp):
+                    cost[i] = np.Inf
+                else:
+                    cost[i] = temp
             cost_ = cost.mean()
         return cost_
         
@@ -350,7 +402,7 @@ class GradientCOBRA(BaseEstimator):
             else:
                 return arr
             
-        def gradient(f, x0, eps = self.optimize_params['precision']):
+        def gradient(f, x0, eps = self.optimize_params_['precision']):
             return np.array([(f(x0 + eps) - f(x0 - eps))/(2*eps)])
 
         kernel_to_dist = {'naive' : 'naive',
@@ -378,10 +430,10 @@ class GradientCOBRA(BaseEstimator):
         else:
             self.p_ = 0
         self.distances(self.pred_X_l, p = self.p_)
-        if self.optimize_method in ['grid', 'grid_search', 'grid search']:
+        if self.optimize_method_ in ['grid', 'grid_search', 'grid search']:
             n_iter = len(params['bandwidth_grid'])
             if self.kernel in ['cobra', 'naive']:
-                errors = np.full((n_iter, self.number_estimators+1), np.float64)
+                errors = np.full((n_iter, self.number_estimators+1), np.float32)
                 if self.show_progress:
                     print('\n\t-> Grid search algorithm with '+ str(self.kernel) + ' kernel is in progress...')
                     print('\t\t~ Full process|--------------------------------------------------|100%')
@@ -409,12 +461,12 @@ class GradientCOBRA(BaseEstimator):
                 self.optimize_outputs = {
                     'number_retained_estimators' : self.number_estimators-opt_id[1],
                     'opt_method' : 'grid',
-                    'opt_bandwidth' : self.optimize_params['bandwidth_grid'][opt_id[0]],
+                    'opt_bandwidth' : self.optimize_params_['bandwidth_grid'][opt_id[0]],
                     'opt_index': opt_id[0],
                     'kappa_cv_errors': errors
                 }
             else:
-                errors = np.full(n_iter, np.float64)
+                errors = np.full(n_iter, np.float32)
                 if self.show_progress:
                     print('\n\t-> Grid search algorithm with '+ str(self.kernel) + ' kernel is in progress...')
                     print('\t\t~ Full process|--------------------------------------------------|100%')
@@ -439,14 +491,13 @@ class GradientCOBRA(BaseEstimator):
                         errors[iter] = self.kappa_cross_validation_error(bandwidth=params['bandwidth_grid'][iter])
                 opt_risk = np.min(np.min(errors))
                 opt_id = select_best_index(np.array(np.where(errors == opt_risk)).reshape((-1,1)))
-                print(opt_id)
                 self.optimize_outputs = {
                     'opt_method' : 'grid',
-                    'opt_bandwidth' : self.optimize_params['bandwidth_grid'][opt_id[0]],
+                    'opt_bandwidth' : self.optimize_params_['bandwidth_grid'][opt_id[0]],
                     'opt_index': opt_id[0],
                     'kappa_cv_errors': errors
                 }
-        if self.optimize_method in ['grad', 'gradient descent', 'gd', 'GD']:
+        if self.optimize_method_ in ['grad', 'gradient descent', 'gd', 'GD']:
             n_iter = len(params['bandwidth_grid'])
             errors = np.full(n_iter, float)
             collect_bw = []
@@ -459,61 +510,61 @@ class GradientCOBRA(BaseEstimator):
                 'quad' : lambda x, y: (1+x ** 2) * y,
                 'exp' : lambda x, y: np.exp(x) * y
             }
-            if self.optimize_params['start'] is None:
-                bws = np.linspace(0.0001, 1/np.var(self.y_l_), num = self.optimize_params['n_tries'])
+            if self.optimize_params_['start'] is None:
+                bws = np.linspace(0.0001, 10, num = self.optimize_params_['n_tries'])
                 initial_tries = [self.kappa_cross_validation_error(bandwidth=b) for b in bws]
                 bw0 = bws[np.argmin(initial_tries)]
             else:
-                bw0 = self.optimize_params['start']
-            grad = gradient(self.kappa_cross_validation_error, bw0, self.optimize_params['precision'])
+                bw0 = self.optimize_params_['start']
+            grad = gradient(self.kappa_cross_validation_error, bw0, self.optimize_params_['precision'])
             test_threshold = np.Inf
             if self.show_progress:
                 print('\n\t* Gradient descent with '+ str(self.kernel) + ' kernel is implemented...')
                 print('\t\t~ Initial t = 0:    \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ threshold: ' %(bw0, grad[0]), end = '')
-                print(str(self.optimize_params['epsilon']))
-                r0 = self.optimize_params['learning_rate'] / abs(grad)        # make the first step exactly equal to `learning-rate`.
-                rate = speed_list[self.optimize_params['speed']]              # the learning rate can be varied, and speed defines this change in learning rate.
+                print(str(self.optimize_params_['epsilon']))
+                r0 = self.optimize_params_['learning_rate'] / abs(grad)        # make the first step exactly equal to `learning-rate`.
+                rate = speed_list[self.optimize_params_['speed']]              # the learning rate can be varied, and speed defines this change in learning rate.
                 count = 0
                 grad0 = grad
-                while count < self.optimize_params['max_iter']:
+                while count < self.optimize_params_['max_iter']:
                     bw = bw0 - rate(count, r0) * grad
                     if bw < 0 or np.isnan(bw):
-                        bw = bw / 1.25
+                        bw = bw * 0.7
                     if count > 3:
                         if np.sign(grad)*np.sign(grad0) < 0:
-                            r0 = r0 / 1.25
-                        if test_threshold > self.optimize_params['epsilon']:
+                            r0 = r0 * 0.7
+                        if test_threshold > self.optimize_params_['epsilon']:
                             bw0, grad0 = bw, grad
                         else:
                             break
                     relative = abs((bw - bw0) / bw0)
                     test_threshold = np.mean([relative, abs(grad)])
-                    grad = gradient(self.kappa_cross_validation_error, bw0, self.optimize_params['precision'])
+                    grad = gradient(self.kappa_cross_validation_error, bw0, self.optimize_params_['precision'])
                     count += 1
-                    print('\t\t~     Iteration: %d \t~ epsilon: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold), end="\r")
+                    print('\t\t~     Iteration: %d \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold), end="\r")
                     collect_bw.append(bw[0])
                     gradients.append(grad[0])
                 print("                                                                                                                                                                            ", end = '\r')
-                print('\t\t~    Stopped at: %d \t~ epsilon: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold))
+                print('\t\t~    Stopped at: %d \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold))
             else:
-                r0 = self.optimize_params['learning_rate'] / abs(grad)
-                rate = speed_list[self.optimize_params['speed']]
+                r0 = self.optimize_params_['learning_rate'] / abs(grad)
+                rate = speed_list[self.optimize_params_['speed']]
                 count = 0
                 grad0 = grad
-                while count < self.optimize_params['max_iter']:
+                while count < self.optimize_params_['max_iter']:
                     bw = bw0 - rate(count, r0) * grad
                     if bw < 0 or np.isnan(bw):
-                        bw = bw / 1.25
+                        bw = bw * 0.7
                     if count > 3:
                         if np.sign(grad)*np.sign(grad0) < 0:
-                            r0 = r0 / 1.25
-                        if test_threshold > self.optimize_params['epsilon']:
+                            r0 = r0 * 0.7
+                        if test_threshold > self.optimize_params_['epsilon']:
                             bw0, grad0 = bw, grad
                         else:
                             break
                     relative = abs((bw - bw0) / bw0)
                     test_threshold = np.mean([relative, abs(grad)])
-                    grad = gradient(self.kappa_cross_validation_error, bw0, self.optimize_params['precision'])
+                    grad = gradient(self.kappa_cross_validation_error, bw0, self.optimize_params_['precision'])
                     count += 1
                     collect_bw.append(bw[0])
                     gradients.append(grad[0])
@@ -529,22 +580,22 @@ class GradientCOBRA(BaseEstimator):
         return self
 
     def predict(self, X, bandwidth = None):
+        X = check_array(X)
         if bandwidth is None:
             bandwidth = self.optimize_outputs['opt_bandwidth']
         if self.as_predictions:
-            self.pred_features_test = X
+            self.pred_features_test = X * self.normalize_constant
         else:
             self.pred_features_test = {}
             for machine in self.estimator_names:
-                self.pred_features_test[machine] = self.basic_estimators[machine].predict(X)
+                self.pred_features_test[machine] = self.basic_estimators[machine].predict(X) * self.normalize_constant
         self.pred_features_x_test = pd.DataFrame(self.pred_features_test, columns=self.estimator_names)
         self.distances(x = self.pred_X_l, pred_test = self.pred_features_x_test, p = self.p_)
         if self.kernel in ['cobra', 'naive']:
-            D_k = (self.list_kernels[self.kernel](np.float64(self.distance_matrix_test), bandwidth) <= (self.optimize_outputs['number_retained_estimators'])/self.number_estimators)
-            
+            D_k = (self.list_kernels[self.kernel](np.float32(self.distance_matrix_test), bandwidth) <= (self.optimize_outputs['number_retained_estimators'])/self.number_estimators)    
         else:
             D_k = self.list_kernels[self.kernel](self.distance_matrix_test, bandwidth)
-        D_k_ = np.sum(D_k, axis=0, dtype=np.float64)
+        D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
         D_k_[D_k_ == 0] = np.Inf
         res = np.matmul(self.y_l_, D_k)/D_k_
         res[res == 0] = res[res != 0].mean()
@@ -572,7 +623,7 @@ class GradientCOBRA(BaseEstimator):
         else:
             if self.optimize_outputs['opt_method'] == 'grid':
                 if self.kernel in ['naive', 'cobra']:
-                    num_estimators, bandwidths = np.meshgrid(list(range(0,self.number_estimators+1,1)), self.optimize_params['bandwidth_grid'])
+                    num_estimators, bandwidths = np.meshgrid(list(range(0,self.number_estimators+1,1)), self.optimize_params_['bandwidth_grid'])
                     err = self.optimize_outputs['kappa_cv_errors']
                     num_opt = self.optimize_outputs['number_retained_estimators']
                     band_opt = self.optimize_outputs['opt_bandwidth']
@@ -596,7 +647,7 @@ class GradientCOBRA(BaseEstimator):
                         plt.show()
                 else:
                     plt.figure(figsize=(7, 3))
-                    plt.plot(self.optimize_params['bandwidth_grid'], self.optimize_outputs['kappa_cv_errors'])
+                    plt.plot(self.optimize_params_['bandwidth_grid'], self.optimize_outputs['kappa_cv_errors'])
                     plt.title('Errors Vs bandwidths (grid search)')
                     plt.xlabel('bandwidth')
                     plt.ylabel('error')
@@ -616,7 +667,7 @@ class GradientCOBRA(BaseEstimator):
                 fig = plt.figure(figsize=(10, 3))
                 ax1 = fig.add_subplot(1,2,1)
                 ax1.plot(range(len(self.optimize_outputs['bandwidth_collection'])), self.optimize_outputs['bandwidth_collection'])
-                ax1.hlines(y=self.optimize_outputs['bandwidth_collection'][-1], xmin=0, xmax=self.optimize_params['max_iter'], colors='r', linestyles='--')
+                ax1.hlines(y=self.optimize_outputs['bandwidth_collection'][-1], xmin=0, xmax=self.optimize_params_['max_iter'], colors='r', linestyles='--')
                 ax1.set_title('Bandwidths at each iteration (gradient descent)')
                 ax1.set_xlabel('iteration')
                 ax1.set_ylabel('bandwidth')
