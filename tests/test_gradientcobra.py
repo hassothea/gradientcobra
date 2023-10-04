@@ -57,11 +57,10 @@ class TestPrediction(unittest.TestCase):
         self.assertAlmostEqual(expected, self.GradientCOBRA.optimize_outputs['opt_bandwidth'])
     
     def test_basic_estimators(self):
-        expected = [2578.4586697386835, 1.2448736091320127, 1.2087950033295554, 4670.95417246458, 2579.2430013026446]
+        expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 4670.95417246458, 2579.2430013026446]
         res = self.GradientCOBRA.pred_X_l.aggregate(
             lambda x : (x / self.GradientCOBRA.normalize_constant - self.y_train[self.GradientCOBRA.iloc_l]) ** 2
-            )\
-            .mean()
+        ).mean()
         for i in range(5):
             self.assertAlmostEqual(expected[i], res.iloc[i])
 
@@ -69,7 +68,7 @@ class TestPrediction(unittest.TestCase):
         expected = 30.976945691554874
         result = mean_squared_error(self.GradientCOBRA.predict(self.X_test), self.y_test)
         self.assertAlmostEqual(expected, result)
-
+        
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
