@@ -44,7 +44,6 @@ jobs:
 
     - name: Publish Package
       env:
-        TWINE_USERNAME: ${{ secrets.pypiusername }}
-        TWINE_PASSWORD: ${{ secrets.pypipwd }}
-        ID_TOKEN: ${{ secrets.pypitoken }}
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.pypitoken }}
       run: twine upload dist/*
