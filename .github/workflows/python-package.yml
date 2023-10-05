@@ -42,9 +42,6 @@ jobs:
         pytest
 
     - name: Build and publish package
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPIUSERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPIPWD }}
       run: |
         python setup.py sdist bdist_wheel
-        twine upload --verbose dist/*
+        twine upload -u __token__ -p ${{ secrets.PYPITOKEN }} dist/*
