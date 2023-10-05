@@ -1,4 +1,11 @@
 from setuptools import setup, find_packages
+import os
+import sys
+# current dir
+current_dir = os.path.dirname(__file__)
+
+# Get the absolute path to the main directory (one level up)
+main_dir = os.path.abspath(os.path.join(current_dir, ".."))
 
 DESCRIPTION = 'This is the python package for a kernel-based consensual aggregation by S. Has (2023)'
 with open('README.txt') as f:
