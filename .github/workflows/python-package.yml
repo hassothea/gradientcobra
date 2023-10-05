@@ -39,11 +39,11 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
-    - name: Package dist
-      run: python setup.py sdist bdist_wheel
 
-    - name: Publish Package
+    - name: Build and publish package
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.pypitoken }}
-      run: twine upload dist/*
+      run: |
+        python setup.py sdist bdist_wheel
+        twine upload dist/*
