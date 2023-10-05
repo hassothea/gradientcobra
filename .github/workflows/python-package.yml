@@ -46,4 +46,5 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.pypiusername }}
         TWINE_PASSWORD: ${{ secrets.pypipwd }}
+        ID_TOKEN: ${{ secrets.pypitoken }}
       run: twine upload dist/*
