@@ -58,11 +58,9 @@ class TestPrediction(unittest.TestCase):
     
     def test_basic_estimators(self):
         expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 4670.95417246458, 2578.4586697386835]
-        res = self.GradientCOBRA.pred_X_l.aggregate(
-            lambda x : (x / self.GradientCOBRA.normalize_constant - self.y_train[self.GradientCOBRA.iloc_l]) ** 2
-        ).mean()
+        res = [mean_squared_error(self.GradientCOBRA.pred_X_l[:,j] / self.GradientCOBRA.normalize_constant, self.y_train[self.GradientCOBRA.iloc_l]) for j in range(len(expected))]
         for i in range(5):
-            self.assertAlmostEqual(expected[i], res.iloc[i])
+            self.assertAlmostEqual(expected[i], res[i])
 
     def test_predict(self):
         expected = 30.976945691554874 # 30.979022169450154 
