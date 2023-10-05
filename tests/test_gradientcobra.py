@@ -54,7 +54,7 @@ class TestPrediction(unittest.TestCase):
 
     def test_opt_bandwidth(self):
         expected = 0.5581881403503334 # 0.5592629558714854
-        self.assertAlmostEqual(expected, self.GradientCOBRA.optimize_outputs['opt_bandwidth'])
+        self.assertAlmostEqual(expected, self.GradientCOBRA.optimization_outputs['opt_bandwidth'])
     
     def test_basic_estimators(self):
         expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 4670.95417246458, 2578.4586697386835]
