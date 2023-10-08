@@ -25,7 +25,7 @@ setup(name='gradientcobra',
           'Programming Language :: Python',
           'Operating System :: OS Independent',
           'Intended Audience :: Science/Research',
-          'Topic :: Scientific/Engineering/Machine-Learning'
+          'Topic :: Scientific/Engineering'
       ],
       install_requires=[
           'numpy',
