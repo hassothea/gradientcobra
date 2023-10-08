@@ -54,11 +54,11 @@ References
 -  M. Mojirsheibani (1999), Combining Classifiers via Discretization,
    Journal of the American Statistical Association.
 
-.. |Travis Status|:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
+.. |Travis Status| image:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
    :target: https://travis-ci.org/hassothea/gradientcobra
 
-.. |Python39|:: image:: https://img.shields.io/badge/python-3.9-blue.svg
+.. |Python39| image:: https://img.shields.io/badge/python-3.9-blue.svg
    :target: https://pypi.python.org/pypi/gradientcobra
 
-.. |Coverage Status|:: https://img.shields.io/codecov/c/github/hassothea/repo-name.svg
+.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/hassothea/repo-name.svg
    :target: https://codecov.io/gh/hassothea/gradientcobra
