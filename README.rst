@@ -14,7 +14,7 @@ Moreoever, gradient descent algorithm is applied to efficiently estimate the ban
 Installation
 ------------
 
-In your terminal, run: ``pip install gradientcobra`` to download and install from PyPI.
+In terminal, run: ``pip install gradientcobra`` to download and install from PyPI.
 
 Citation
 --------
