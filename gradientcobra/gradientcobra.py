@@ -28,7 +28,7 @@ import warnings
 class GradientCOBRA(BaseEstimator):
     def __init__(self, 
                 random_state = None, 
-                learning_rate = 0.1,
+                learning_rate = 0.01,
                 speed = 'constant',
                 estimator_list = None, 
                 estimator_params = None, 
@@ -57,7 +57,7 @@ class GradientCOBRA(BaseEstimator):
                 - `key`     : the name of the basic estimator defined in `estimator_list`, 
                 - `value`   : a dictionary with (key, value) = (parameter, value).
 
-            - `learning_rate`: (default is `0.1`) the learning rate in gradient descent algorithm for estimating the optimal bandwidth.
+            - `learning_rate`: (default is `0.01`) the learning rate in gradient descent algorithm for estimating the optimal bandwidth.
 
             - `speed`: (default is `constant`) the adjusting speed of the learning rate. It is helpful when the cost function is flate around the optimal value, changing the learning speed might help the algorithm to converge faster.
                 It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
