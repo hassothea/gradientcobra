@@ -21,7 +21,7 @@ Citation
 
 If you find `gradientcobra` helpful, please consider citing the following papaers:
 
-- S., Has (2023), `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
+- Has, S., 2023, `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
 
 - Biau, Fischer, Guedj and Malley (2016), `COBRA: A combined regression strategy <https://doi.org/10.1016/j.jmva.2015.04.007>`__.
 
@@ -45,7 +45,7 @@ Dependencies
 References
 ----------
 
--  HAS, S. (2023). A Gradient COBRA: A kernel-based consensual aggregation for regression. 
+-  HAS, S., 2023. Gradient COBRA: A kernel-based consensual aggregation for regression. 
    Journal of Data Science, Statistics, and Visualisation, 3(2).
 -  G. Biau, A. Fischer, B. Guedj and J. D. Malley (2016), COBRA: A
    combined regression strategy, Journal of Multivariate Analysis.
@@ -55,7 +55,7 @@ References
 .. |Travis Status| image:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
    :target: https://travis-ci.org/hassothea/gradientcobra
 
-.. |Python39| image:: https://img.shields.io/badge/python-3.9-blue.svg
+.. |Python39| image:: https://img.shields.io/badge/python-3.9-green.svg
    :target: https://pypi.python.org/pypi/gradientcobra
 
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/hassothea/gradientcobra.svg
