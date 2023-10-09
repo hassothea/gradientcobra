@@ -28,7 +28,7 @@ If you find `gradientcobra` helpful, please consider citing the following papaer
 Documentation and Examples
 --------------------------
 
-For more information and how to use the packge, read [`gradientcobra` documentation](https://github.com/hassothea/gradientcobra/gradientcobra_doc.html).
+For more information and how to use the packge, read `gradientcobra documentation <https://github.com/hassothea/gradientcobra/gradientcobra_doc.html>`__.
 
 Dependencies
 ------------
