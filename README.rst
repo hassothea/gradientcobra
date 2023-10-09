@@ -16,7 +16,6 @@ In your terminal, run the following `pip` command to download and install from P
 
 ------
 ``pip install gradientcobra`` .
-
 ------
 
 Citation
