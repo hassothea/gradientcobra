@@ -28,13 +28,7 @@ If you find `gradientcobra` helpful, please consider citing the following papaer
 Documentation and Examples
 --------------------------
 
-The
-`notebooks <https://github.com/bhargavvader/pycobra/tree/master/docs/notebooks>`__
-directory showcases the usage of pycobra, with examples and basic usage.
-The `documentation <https://modal.lille.inria.fr/pycobra/>`__ page further
-covers how to use pycobra.
-
-
+For more information and how to use the packge, read [`gradientcobra` documentation](https://github.com/hassothea/gradientcobra/gradientcobra_doc.html).
 
 Dependencies
 ------------
