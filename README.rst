@@ -12,7 +12,12 @@ It is theoretically shown that consistency inheritance property also holds for t
 Installation
 ------------
 
-In your terminal, run: ``pip install gradientcobra`` to download and install from PyPI.
+In your terminal, run the following `pip` command to download and install from PyPI:
+
+------
+``pip install gradientcobra`` .
+
+------
 
 Citation
 --------
@@ -22,7 +27,6 @@ If you find `gradientcobra` helpful, please consider citing the following papaer
 - S., Has (2023), `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
 
 - Biau, Fischer, Guedj and Malley (2016), `COBRA: A combined regression strategy <https://doi.org/10.1016/j.jmva.2015.04.007>`__.
-
 
 Documentation and Examples
 --------------------------
@@ -45,11 +49,11 @@ References
 ----------
 
 -  HAS, S. (2023). A Gradient COBRA: A kernel-based consensual aggregation for regression. 
-   Journal of Data Science, Statistics, and Visualisation, 3(2). `https://doi.org/10.52933/jdssv.v3i2 <https://jdssv.org/index.php/jdssv/article/view/70>`__.
+   Journal of Data Science, Statistics, and Visualisation, 3(2).
 -  G. Biau, A. Fischer, B. Guedj and J. D. Malley (2016), COBRA: A
    combined regression strategy, Journal of Multivariate Analysis.
 -  M. Mojirsheibani (1999), Combining Classifiers via Discretization,
-   Journal of the American Statistical Association.
+   Journal of the American Statistical Association. 
 
 .. |Travis Status| image:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
    :target: https://travis-ci.org/hassothea/gradientcobra
