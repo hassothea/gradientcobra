@@ -33,7 +33,7 @@ If you find ``gradientcobra`` helpful, please consider citing the following papa
 Documentation and Examples
 --------------------------
 
-For more information and how to use the package, read [gradientcobra documentation](https://github.com/hassothea/gradientcobra/gradientcobra_doc.html).
+For more information and how to use the package, read `gradientcobra documentation <https://hassothea.github.io/files/CodesPhD/gradientcobra_doc.html>`__.
 
 Dependencies
 ------------
