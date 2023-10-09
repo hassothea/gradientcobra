@@ -12,9 +12,9 @@ It is theoretically shown that consistency inheritance property also holds for t
 Installation
 ------------
 
-In your terminal, run the following `pip` command to download and install from PyPI:
+In your terminal, run ``pip install gradientcobra`` to download and install from PyPI:
 
-`pip install gradientcobra` .
+ .
 
 Citation
 --------
