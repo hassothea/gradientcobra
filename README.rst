@@ -14,7 +14,7 @@ Installation
 
 In your terminal, run the following `pip` command to download and install from PyPI:
 
-``pip install gradientcobra`` .
+`pip install gradientcobra` .
 
 Citation
 --------
