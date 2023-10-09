@@ -6,7 +6,7 @@ gradientcobra
 Introduction
 ------------
 
-``gradientcobra`` is the ``python`` package implementation of `S. Has (2023) <https://jdssv.org/index.php/jdssv/article/view/70>`__, which is a Kernel-based consensual aggregation method for regression problems. 
+`gradientcobra` is the `python` package implementation of `S. Has (2023) <https://jdssv.org/index.php/jdssv/article/view/70>`__, which is a Kernel-based consensual aggregation method for regression problems. 
 Is is a regular kernel-based version of `Cobra` method of `Biau et al. (2016) <https://www.sciencedirect.com/science/article/pii/S0047259X15000950>`__. 
 It is theoretically shown that consistency inheritance property also holds for this kernel-based configuration, and the same convergence rate is achieved.
 Moreoever, gradient descent algorithm is applied to efficiently estimate the bandwidth parameter of the method.
@@ -14,12 +14,12 @@ Moreoever, gradient descent algorithm is applied to efficiently estimate the ban
 Installation
 ------------
 
-In terminal, run: ``pip install gradientcobra`` to download and install from PyPI.
+In your terminal, run: ``pip install gradientcobra`` to download and install from PyPI.
 
 Citation
 --------
 
-If you find ``gradientcobra`` helpful, please consider citing the following papaers:
+If you find `gradientcobra` helpful, please consider citing the following papaers:
 
 - S., Has (2023), `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
 
@@ -28,6 +28,14 @@ If you find ``gradientcobra`` helpful, please consider citing the following papa
 
 Documentation and Examples
 --------------------------
+
+The
+`notebooks <https://github.com/bhargavvader/pycobra/tree/master/docs/notebooks>`__
+directory showcases the usage of pycobra, with examples and basic usage.
+The `documentation <https://modal.lille.inria.fr/pycobra/>`__ page further
+covers how to use pycobra.
+
+
 
 Dependencies
 ------------
@@ -46,11 +54,11 @@ References
 -  M. Mojirsheibani (1999), Combining Classifiers via Discretization,
    Journal of the American Statistical Association.
 
-.. |Travis Status| image:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
+.. |Travis Status|:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
    :target: https://travis-ci.org/hassothea/gradientcobra
 
-.. |Python39| image:: https://img.shields.io/badge/python-3.9-green.svg
+.. |Python39|:: image:: https://img.shields.io/badge/python-3.9-blue.svg
    :target: https://pypi.python.org/pypi/gradientcobra
 
-.. |Coverage Status| image:: https://img.shields.io/codecov/c/github/hassothea/gradientcobra.svg
+.. |Coverage Status|:: https://img.shields.io/codecov/c/github/hassothea/repo-name.svg
    :target: https://codecov.io/gh/hassothea/gradientcobra
