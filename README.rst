@@ -12,7 +12,7 @@ We have theoretically shown that the consistency inheritance property also holds
 Moreoever, gradient descent algorithm is applied to efficiently estimate the bandwidth parameter of the method. This efficiency is illustrated in several numerical experiments on simulated and real datasets.
 
 From version ``v1.0.5``, the aggregation method using input-output trade-off by `A. Fischer and M. Mougeot (2019) <https://www.sciencedirect.com/science/article/pii/S0378375818302349>`__ is also available for regression problems. This method is available as ``MixCOBRARegressor`` in ``gradientcobra.mixcobra`` module.
-For more information, read `gradientcobra.mixcobra documentation <https://hassothea.github.io/files/CodesPhD/mixcobra_doc.html>`__.
+For more information, read `MixCOBRARegressor documentation <https://hassothea.github.io/files/CodesPhD/mixcobra.html>`__.
 
 
 Installation
@@ -38,7 +38,13 @@ If you find ``gradientcobra`` helpful, please consider citing the following papa
 Documentation and Examples
 --------------------------
 
-For more information and how to use the package, read `gradientcobra.gradientcobra <https://hassothea.github.io/files/CodesPhD/gradientcobra_doc.html>`__ and `gradientcobra.mixcobra documentation <https://hassothea.github.io/files/CodesPhD/mixcobra_doc.html>`__.
+For more information and how to use the package, read `gradientcobra <https://hassothea.github.io/files/CodesPhD/gradientcobra_doc.html>`__.
+
+Read also:
+
+- `GradientCOBRA documentation <https://hassothea.github.io/files/CodesPhD/GradientCOBRA.html>`__.
+
+- `MixCOBRARegressor documentation <https://hassothea.github.io/files/CodesPhD/mixcobra.html>`__.
 
 Dependencies
 ------------
