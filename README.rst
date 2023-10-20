@@ -28,7 +28,7 @@ Citation
 
 If you find ``gradientcobra`` helpful, please consider citing the following papaers:
 
--   S. Has (2023), `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
+-   S.\  Has (2023), `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
 
 -   A.\  Fischer and M. Mougeot (2019), `Aggregation using input-output trade-off <https://www.sciencedirect.com/science/article/pii/S0378375818302349>`__.
 
