@@ -30,7 +30,7 @@ If you find ``gradientcobra`` helpful, please consider citing the following papa
 
 -   S. Has (2023), `Gradient COBRA: A kernel-based consensual aggregation for regression <https://jdssv.org/index.php/jdssv/article/view/70>`__.
 
--   A. Fischer and M. Mougeot (2019), `Aggregation using input-output trade-off <https://www.sciencedirect.com/science/article/pii/S0378375818302349>`__.
+-   A.\ Fischer and M. Mougeot (2019), `Aggregation using input-output trade-off <https://www.sciencedirect.com/science/article/pii/S0378375818302349>`__.
 
 -   Biau, Fischer, Guedj and Malley (2016), `COBRA: A combined regression strategy <https://doi.org/10.1016/j.jmva.2015.04.007>`__.
 
@@ -51,7 +51,7 @@ References
 
 -  S. Has (2023). A Gradient COBRA: A kernel-based consensual aggregation for regression. 
    Journal of Data Science, Statistics, and Visualisation, 3(2).
--  A. Fischer, M. Mougeot (2019). Aggregation using input-output trade-off. 
+-  A.\ Fischer, M. Mougeot (2019). Aggregation using input-output trade-off. 
    Journal of Statistical Planning and Inference, 200.
 -  G. Biau, A. Fischer, B. Guedj and J. D. Malley (2016), COBRA: A
    combined regression strategy, Journal of Multivariate Analysis.
