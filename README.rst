@@ -1,4 +1,4 @@
-gradientcobra v1.0.6
+gradientcobra v1.0.8
 ====================
 
 |Travis Status| |Coverage Status| |Python39|
