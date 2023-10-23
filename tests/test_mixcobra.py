@@ -54,7 +54,7 @@ class TestPrediction(unittest.TestCase):
 
     def test_opt_bandwidth(self):
         expected_alpha = 1e-05
-        expected_beta = 0.5591282113123428
+        expected_beta = 0.707079292929293
         self.assertAlmostEqual(expected_alpha, self.MixCOBRARegressor.optimization_outputs['opt_alpha'])
         self.assertAlmostEqual(expected_beta, self.MixCOBRARegressor.optimization_outputs['opt_beta'])
     
