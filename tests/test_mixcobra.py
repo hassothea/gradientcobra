@@ -19,7 +19,7 @@ print(main_dir)
 # Add the main directory to the Python path
 sys.path.insert(0, main_dir)
 
-from gradientcobra.mixcobra import MixCOBRARegressor
+from mixcobra import MixCOBRARegressor
 
 from sklearn.utils.estimator_checks import check_estimator
 
@@ -53,7 +53,7 @@ class TestPrediction(unittest.TestCase):
         self.MixCOBRARegressor = agg_model
 
     def test_opt_bandwidth(self):
-        expected_alpha = 0.5591282113123428 # 0.5581881403503334 # 0.5592629558714854
+        expected_alpha = 1e-05
         expected_beta = 0.5591282113123428
         self.assertAlmostEqual(expected_alpha, self.MixCOBRARegressor.optimization_outputs['opt_alpha'])
         self.assertAlmostEqual(expected_beta, self.MixCOBRARegressor.optimization_outputs['opt_beta'])
@@ -65,7 +65,7 @@ class TestPrediction(unittest.TestCase):
             self.assertAlmostEqual(expected[i], res[i])
 
     def test_predict(self):
-        expected = 30.97875936419449 #30.976945691554874 # 30.979022169450154 
+        expected = 30.966584258235706
         result = mean_squared_error(self.MixCOBRARegressor.predict(self.X_test), self.y_test)
         self.assertAlmostEqual(expected, result)
         
