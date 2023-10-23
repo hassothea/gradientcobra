@@ -19,7 +19,7 @@ print(main_dir)
 # Add the main directory to the Python path
 sys.path.insert(0, main_dir)
 
-from mixcobra import MixCOBRARegressor
+from gradientcobra.mixcobra import MixCOBRARegressor
 
 from sklearn.utils.estimator_checks import check_estimator
 
