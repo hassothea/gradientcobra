@@ -814,6 +814,7 @@ class MixCOBRARegressor(BaseEstimator):
                             save_fig = False, 
                             fig_path = None, 
                             show_fig = True, 
+                            dpi = 300,
                             engine = "plotly"):
         # sns.set()
         opt_color = "#FF0234" # "#21D129"
