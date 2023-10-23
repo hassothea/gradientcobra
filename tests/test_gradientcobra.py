@@ -19,7 +19,7 @@ print(main_dir)
 # Add the main directory to the Python path
 sys.path.insert(0, main_dir)
 
-from gradientcobra import GradientCOBRA
+from gradientcobra.gradientcobra import GradientCOBRA
 
 from sklearn.utils.estimator_checks import check_estimator
 
