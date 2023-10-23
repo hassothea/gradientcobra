@@ -7,14 +7,14 @@ from setuptools import setup, find_packages
 # Get the absolute path to the main directory (one level up)
 #main_dir = os.path.abspath(os.path.join(current_dir, ".."))
 
-DESCRIPTION = 'This is the python package for a kernel-based consensual aggregation by S. Has (2023)'
+DESCRIPTION = 'This is the python package for a kernel-based consensual aggregation by S. Has (2023), and A. Fischer and M. Mougeot (2019)'
 with open('README.rst') as f:
     LONG_DESCRIPTION = f.read()
 
-version = "1.0.0"
+version = "1.0.8"
 setup(name='gradientcobra',
       version=version,
-      description='Python implementation for Gradient COBRA: A kernel-based consensual aggregation for regression by S. Has (2023).',
+      description='Python implementation for Gradient COBRA by S. Has (2023), and MixCOBRA by A. Fischer and M. Mougeot (2019).',
       author=["Sothea Has"],
       author_email="sothea.has@lpsm.paris",
       url='https://github.com/hassothea/gradientcobra/',
@@ -33,7 +33,8 @@ setup(name='gradientcobra',
           'scipy>=1.10.1',
           'scikit-learn>=1.2',
           'matplotlib',
-          'seaborn'
+          'seaborn',
+          'plotly>=5.10.0'
 
       ],
       test_suite='tests',

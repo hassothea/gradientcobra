@@ -60,8 +60,3 @@ References
 
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/hassothea/gradientcobra.svg
    :target: https://codecov.io/gh/hassothea/gradientcobra
-
-
-
-
-
