@@ -30,7 +30,7 @@ class GradientCOBRA(BaseEstimator):
                 random_state = None, 
                 learning_rate = 0.1,
                 bandwidth_list = None,
-                speed = 'constant',
+                speed = 'linear',
                 estimator_list = None, 
                 estimator_params = None, 
                 opt_method = "grad",
