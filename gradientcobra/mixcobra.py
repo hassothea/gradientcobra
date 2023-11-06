@@ -28,7 +28,7 @@ class MixCOBRARegressor(BaseEstimator):
     def __init__(self,
                 random_state = None,
                 learning_rate = 0.01,
-                speed = 'constant',
+                speed = 'linear',
                 estimator_list = None, 
                 estimator_params = None, 
                 opt_method = "grid",
