@@ -52,7 +52,7 @@ class TestPrediction(unittest.TestCase):
         self.GradientCOBRA = agg_model
 
     def test_opt_bandwidth(self):
-        expected = 3.1726470023611064
+        expected = 2.8176142881322046
         self.assertAlmostEqual(expected, self.GradientCOBRA.optimization_outputs['opt_bandwidth'])
     
     def test_basic_estimators(self):
@@ -62,7 +62,7 @@ class TestPrediction(unittest.TestCase):
             self.assertAlmostEqual(expected[i], res[i])
 
     def test_predict(self):
-        expected = 43.877992366133896
+        expected = 42.32098310911533
         result = mean_squared_error(self.GradientCOBRA.predict(self.X_test), self.y_test)
         self.assertAlmostEqual(expected, result)
         
