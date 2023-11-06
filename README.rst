@@ -1,4 +1,4 @@
-gradientcobra v1.0.8
+gradientcobra v1.0.9
 ====================
 
 |Travis Status| |Coverage Status| |Python39|
@@ -12,7 +12,7 @@ We have theoretically shown that the consistency inheritance property also holds
 Moreoever, gradient descent algorithm is applied to efficiently estimate the bandwidth parameter of the method. This efficiency is illustrated in several numerical experiments on simulated and real datasets.
 
 From version ``v1.0.6``, the aggregation method using input-output trade-off by `A. Fischer and M. Mougeot (2019) <https://www.sciencedirect.com/science/article/pii/S0378375818302349>`__ is also available for regression problems. This method is available as ``MixCOBRARegressor`` in ``gradientcobra.mixcobra`` module.
-For more information, read `MixCOBRARegressor documentation <https://hassothea.github.io/files/CodesPhD/mixcobra.html>`__.
+For more information, read "Documentation and Examples".
 
 
 Installation
