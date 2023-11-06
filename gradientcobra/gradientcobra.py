@@ -715,7 +715,7 @@ class GradientCOBRA(BaseEstimator):
                                             xaxis_title='Bandwidth',
                                             yaxis_title='Number of retained estimator',
                                             zaxis_title='Error'),
-                                          title_text = "Errors vs parameters for ("+ str(self.kernel) + " kernel)", 
+                                          title_text = "Errors vs parameters with "+ str(self.kernel) + " kernel", 
                                           title_x = .5, 
                                           title_y = 0.925,
                                           width = 700,
@@ -731,7 +731,7 @@ class GradientCOBRA(BaseEstimator):
                         axs = fig.add_subplot(projection='3d')
                         surf = axs.plot_surface(bandwidths, num_estimators, err, cmap=cm.coolwarm, linewidth=0, antialiased=False)
                         axs.plot(band_opt, num_opt, self.optimization_outputs['kappa_cv_errors'][self.optimization_outputs['opt_index'], num_opt-1], 'o')
-                        axs.set_title("Errors Vs bandwidths and number of estimators ("+ str(self.kernel)+ " kernel)")
+                        axs.set_title("Errors Vs bandwidths and number of estimators with "+ str(self.kernel)+ " kernel")
                         axs.set_xlabel("bandwidth")
                         axs.set_ylabel("number of estimators")
                         axs.set_zlabel("Kappa cross-validation error")
