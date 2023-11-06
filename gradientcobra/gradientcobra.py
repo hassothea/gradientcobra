@@ -206,7 +206,7 @@ class GradientCOBRA(BaseEstimator):
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
-                     'precision' : 2 * 10 ** (-5)
+                     'precision' : 10 ** (-10)
         }
 
         if self.bandwidth_list is None:

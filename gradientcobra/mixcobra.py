@@ -239,7 +239,7 @@ class MixCOBRARegressor(BaseEstimator):
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
-                     'precision' : 2 * 10 ** (-5)}
+                     'precision' : 10 ** (-10)}
         
         # Set optional parameters
         if self.opt_params is not None:
@@ -499,7 +499,7 @@ class MixCOBRARegressor(BaseEstimator):
                 n_iter = len(self.bandwidth_list_)
                 errors = np.full(n_iter, np.float32)
                 if self.show_progress:
-                    print('\n\t* Grid search algorithm of one parameter with '+ str(self.kernel) + ' kernel is in progress...')
+                    print('\n\t* Grid search for ONE parameter with '+ str(self.kernel) + ' kernel is in progress...')
                     m = 1
                     count = 0
                     if n_iter <= 50:
@@ -541,7 +541,7 @@ class MixCOBRARegressor(BaseEstimator):
                 n_iter = len(self.alpha_list_) * len(self.beta_list_)
                 errors = np.full((len(self.alpha_list_), len(self.beta_list_)), np.float32)
                 if self.show_progress:
-                    print('\n\t* Grid search algorithm of two parameters with '+ str(self.kernel) + ' kernel is in progress...')
+                    print('\n\t* Grid search for TWO parameters with '+ str(self.kernel) + ' kernel is in progress...')
                     m = 1
                     count = 0
                     if n_iter <= 50:
@@ -610,7 +610,7 @@ class MixCOBRARegressor(BaseEstimator):
                 grad = gradient(self.kappa_cross_validation_error, bw0, params['precision'])
                 test_threshold = np.Inf
                 if self.show_progress:
-                    print('\n\t* Gradient descent of one parameter with '+ str(self.kernel) + ' kernel is implemented...')
+                    print('\n\t* Gradient descent for ONE parameter with '+ str(self.kernel) + ' kernel is implemented...')
                     print('\t\t~ Initial t = 0:    \t~ bandwidth: %.3f \t~ gradient: %.3f \t ~ threshold: ' %(bw0, grad[0]), end = '')
                     print(str(params['epsilon']))
                     r0 = self.learning_rate / abs(grad)    
@@ -688,7 +688,7 @@ class MixCOBRARegressor(BaseEstimator):
                 grad = gradient2(self.kappa_cross_validation_error2, x0=alp0, y0=bet0, eps=params['precision'])
                 test_threshold = np.Inf
                 if self.show_progress:
-                    print('\n\t* Gradient descent of two parameters with '+ str(self.kernel) + ' kernel is implemented...')
+                    print('\n\t* Gradient descent for TWO parameters with '+ str(self.kernel) + ' kernel is implemented...')
                     print('\t\t~ Initial t = 0:    \t~ (alpha, beta): (%.3f, %.3f) \t~ |gradient|_1: %.3f \t ~ threshold: ' %(alp0, bet0, norm1(grad)), end = '')
                     print(str(params['epsilon']))
                     r0 = self.learning_rate / norm1(grad)      
@@ -931,7 +931,7 @@ class MixCOBRARegressor(BaseEstimator):
                                             xaxis_title='Alpha',
                                             yaxis_title='Beta',
                                             zaxis_title='Loss'),
-                                          title_text = "Loss vs parameters (alpha, beta) for ("+ str(self.kernel) + " kernel)", 
+                                          title_text = "Loss vs parameters (alpha, beta) with "+ str(self.kernel) + " kernel", 
                                           title_x = .5, 
                                           title_y = 0.925,
                                           width = 500,
@@ -957,7 +957,7 @@ class MixCOBRARegressor(BaseEstimator):
                                       [opt_beta], 
                                       [opt_error],
                                       c = opt_color)
-                        axs.set_title("Loss vs parameters (alpha, beta) for ("+ str(self.kernel)+ " kernel)")
+                        axs.set_title("Loss vs parameters (alpha, beta) with "+ str(self.kernel)+ " kernel")
                         axs.set_xlabel("Alpha")
                         axs.set_ylabel("Beta")
                         axs.set_zlabel("Kappa cross-validation error")
@@ -1110,7 +1110,7 @@ class MixCOBRARegressor(BaseEstimator):
                                             xaxis_title='Alpha',
                                             yaxis_title='Beta',
                                             zaxis_title='Loss'),
-                                          title_text = "Loss vs parameters (alpha, beta) for ("+ str(self.kernel) + " kernel)", 
+                                          title_text = "Loss vs parameters (alpha, beta) with "+ str(self.kernel) + " kernel", 
                                           title_x = .5,
                                           title_y = 0.925,
                                           width = 500,
@@ -1137,7 +1137,7 @@ class MixCOBRARegressor(BaseEstimator):
                         axs.scatter(self.optimization_outputs['param_collection'][:,0][range(0,n,5)].reshape(-1),
                                     self.optimization_outputs['param_collection'][:,1][range(0,n,5)].reshape(-1),
                                     err_path, '-o', c = opt_color)
-                        axs.set_title("Loss vs parameters (alpha, beta) for ("+ str(self.kernel)+ " kernel)")
+                        axs.set_title("Loss vs parameters (alpha, beta) with "+ str(self.kernel)+ " kernel")
                         axs.set_xlabel("Alpha")
                         axs.set_ylabel("Beta")
                         axs.set_zlabel("Kappa cross-validation error")
