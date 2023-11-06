@@ -23,7 +23,6 @@ from gradientcobra.gradientcobra import GradientCOBRA
 
 from sklearn.utils.estimator_checks import check_estimator
 
-
 class TestPrediction(unittest.TestCase):
     def setUp(self):
         rd_state = np.random.RandomState(11111)
