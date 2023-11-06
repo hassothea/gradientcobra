@@ -28,7 +28,7 @@ from sklearn.base import BaseEstimator
 class GradientCOBRA(BaseEstimator):
     def __init__(self, 
                 random_state = None, 
-                learning_rate = 0.1,
+                learning_rate = 0.01,
                 bandwidth_list = None,
                 speed = 'linear',
                 estimator_list = None, 
