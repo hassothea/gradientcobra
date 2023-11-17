@@ -1,4 +1,4 @@
-gradientcobra v1.0.10
+gradientcobra v1.0.11
 ====================
 
 |Travis Status| |Coverage Status| |Python39|
@@ -11,9 +11,7 @@ It is a regular kernel-based version of ``COBRA`` method by `Biau et al. (2016) 
 We have theoretically shown that the consistency inheritance property also holds for this kernel-based configuration, and the same convergence rate as classical COBRA is achieved.
 Moreoever, gradient descent algorithm is applied to efficiently estimate the bandwidth parameter of the method. This efficiency is illustrated in several numerical experiments on simulated and real datasets.
 
-From version ``v1.0.6``, the aggregation method using input-output trade-off by `A. Fischer and M. Mougeot (2019) <https://www.sciencedirect.com/science/article/pii/S0378375818302349>`__ is also available for regression problems. This method is available as ``MixCOBRARegressor`` in ``gradientcobra.mixcobra`` module.
-For more information, read "Documentation and Examples".
-
+For more information, read the "Documentation and Examples" below.
 
 Installation
 ------------
@@ -40,11 +38,15 @@ Documentation and Examples
 
 For more information and how to use the package, read `gradientcobra documentation <https://hassothea.github.io/files/CodesPhD/gradientcobra_doc.html>`__.
 
-Read also:
+Available methods:
 
 - `GradientCOBRA documentation <https://hassothea.github.io/files/CodesPhD/GradientCOBRA.html>`__.
 
 - `MixCOBRARegressor documentation <https://hassothea.github.io/files/CodesPhD/mixcobra.html>`__.
+
+- `Kernel Smoother documentation <https://hassothea.github.io/files/CodesPhD/kernelsmoother.html>`__.
+
+- `Super Learner documentation <https://hassothea.github.io/files/CodesPhD/superlearner.html>`__.
 
 Dependencies
 ------------
@@ -63,6 +65,10 @@ References
    combined regression strategy, Journal of Multivariate Analysis.
 -  M. Mojirsheibani (1999), Combining Classifiers via Discretization,
    Journal of the American Statistical Association.
+- van der Laan, M. J., Polley, E. C. and Hubbard, A. E. (2007) Super Learner. 
+   Statistical Applications of Genetics and Molecular Biology, 6, article 25.
+- Hastie, T., Tibshirani, R., Friedman, J. (2009). Kernel Smoothing Methods.
+   The Elements of Statistical Learning. Springer Series in Statistics. Springer, New York, NY.
 
 .. |Travis Status| image:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
    :target: https://travis-ci.org/hassothea/gradientcobra
