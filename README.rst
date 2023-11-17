@@ -65,7 +65,7 @@ References
    combined regression strategy, Journal of Multivariate Analysis.
 -  M. Mojirsheibani (1999), Combining Classifiers via Discretization,
    Journal of the American Statistical Association.
--  M. J.\  Van der Laan, E. C. Polley, and A. E. Hubbard (2007). Super Learner. 
+-  M.\  J. Van der Laan, E. C. Polley, and A. E. Hubbard (2007). Super Learner. 
    Statistical Applications of Genetics and Molecular Biology, 6, article 25.
 -  T.\  Hastie, R. Tibshirani, J. Friedman (2009). Kernel Smoothing Methods.
    The Elements of Statistical Learning. Springer Series in Statistics. Springer, New York, NY.
