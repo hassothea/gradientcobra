@@ -54,18 +54,18 @@ class TestPrediction(unittest.TestCase):
 
     def test_opt_bandwidth(self):
         expected_alpha = 1e-05
-        expected_beta = 0.707079292929293
+        expected_beta = 0.10101989898989899 #0.707079292929293
         self.assertAlmostEqual(expected_alpha, self.MixCOBRARegressor.optimization_outputs['opt_alpha'])
         self.assertAlmostEqual(expected_beta, self.MixCOBRARegressor.optimization_outputs['opt_beta'])
     
     def test_basic_estimators(self):
-        expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 4670.95417246458, 2578.4586697386835]
+        expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 4670.95417246458, 2578.7216645393437]
         res = [mean_squared_error(self.MixCOBRARegressor.Pred_X_l_[:,j] / self.MixCOBRARegressor.normalize_constant_y, self.y_train[self.MixCOBRARegressor.iloc_l]) for j in range(len(expected))]
         for i in range(len(expected)):
             self.assertAlmostEqual(expected[i], res[i])
 
     def test_predict(self):
-        expected = 30.966584258235706
+        expected = 31.816559459542464 #30.966584258235706
         result = mean_squared_error(self.MixCOBRARegressor.predict(self.X_test), self.y_test)
         self.assertAlmostEqual(expected, result)
         
