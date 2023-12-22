@@ -2,7 +2,7 @@ gradientcobra v1.0.12
 ====================
 
 .. image:: https://github.com/hassothea/gradientcobra/blob/main/gradientcobra_logo.png
-   :width: 500
+   :width: 350
 
 |Python39|
 
