@@ -4,7 +4,7 @@ gradientcobra v1.0.11
 .. image:: https://github.com/hassothea/gradientcobra/blob/main/gradientcobra_logo.png
    :width: 300
 
-|Travis Status| |Coverage Status| |Python39|
+|Python39|
 
 Introduction
 ------------
