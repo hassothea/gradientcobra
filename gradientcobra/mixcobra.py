@@ -28,7 +28,7 @@ class MixCOBRARegressor(BaseEstimator):
     def __init__(self,
                 random_state = None,
                 learning_rate = 0.01,
-                speed = 'linear',
+                speed = 'constant',
                 estimator_list = None, 
                 estimator_params = None, 
                 opt_method = "grid",
@@ -41,7 +41,9 @@ class MixCOBRARegressor(BaseEstimator):
                 max_iter =int(300),
                 show_progress = True,
                 loss_function = None,
-                loss_weight = None):
+                loss_weight = None,
+                norm_constant_x = None,
+                norm_constant_y = None):
         """
         This is a class of the implementation of MixCOBRA aggregation method for regression by A. Fischer and M. Mougeot (2019).
 
@@ -98,6 +100,8 @@ class MixCOBRARegressor(BaseEstimator):
             - `loss_weight` : (default is None) a list of size equals to the size of the training data defining the weight for each individual data point in the loss function. 
                 If it is None and the `loss_function = weighted_mse`, then a normalized weight W(i) = 1/PDF(i) is assigned to individual i of the training data.
 
+            - `norm_constant_x`, `norm_constant_y` : (default is None) the normalize constant of inputs and output resp. This allows to scale the range of the bandwidth parameters $(\alpha, \beta)$.
+        
         * Returns:
         ---------
             self : returns an instance of self. 
@@ -132,6 +136,8 @@ class MixCOBRARegressor(BaseEstimator):
         self.max_iter = max_iter
         self.loss_weight = loss_weight
         self.loss_function = loss_function
+        self.norm_constant_x = norm_constant_x
+        self.norm_constant_y = norm_constant_y
 
     # List of kernel functions
     def reverse_cosh(self, x, y = 0, al = 1, be = 0):
@@ -198,8 +204,14 @@ class MixCOBRARegressor(BaseEstimator):
             y = y.astype(np.float64)
         self.X_ = X
         self.y_ = y
-        self.normalize_constant_x = 0.1 / np.max(np.abs(X), axis=0)
-        self.normalize_constant_y = 10 / np.max(np.abs(y))
+        if self.norm_constant_x is None:
+            self.normalize_constant_x = 30 / np.max(np.abs(X), axis=0)
+        else:
+            self.normalize_constant_x = self.norm_constant_x / np.max(np.abs(X), axis=0)
+        if self.norm_constant_y is None:
+            self.normalize_constant_y = 30 / np.max(np.abs(y))
+        else:
+            self.normalize_constant_y = self.norm_constant_y / np.max(np.abs(y))
         self.as_predictions_ = False
         self.shuffle_input_ = True
         if (X_l is not None) and (y_l is not None):
@@ -211,7 +223,7 @@ class MixCOBRARegressor(BaseEstimator):
         if Pred_features is not None:
             self.X_l_ = X
             self.y_l_ = y
-            self.Pred_X_l_ = check_array(Pred_features)
+            self.Pred_X_l_ = check_array(Pred_features) * self.normalize_constant_y
             self.as_predictions_ = True
             self.iloc_l = np.array(range(len(self.y_l_)), dtype = np.int64)
             self.feature_dim = self.Pred_X_l_
@@ -239,7 +251,7 @@ class MixCOBRARegressor(BaseEstimator):
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
-                     'precision' : 10 ** (-10)}
+                     'precision' : 10 ** (-7)}
         
         # Set optional parameters
         if self.opt_params is not None:
@@ -767,7 +779,7 @@ class MixCOBRARegressor(BaseEstimator):
         X_normalized = X * self.normalize_constant_x
         if self.as_predictions_:
             try:
-                self.Pred_X_test = Pred_X * 1
+                self.Pred_X_test = Pred_X * self.normalize_constant_y
             except TypeError:
                 print("There is no basic estimator built. `Pred_X` must NOT be `None`!")
         else:
@@ -795,7 +807,7 @@ class MixCOBRARegressor(BaseEstimator):
                     type_="input")
             self.distances(x = self.Pred_X_l_, 
                     pred_test = self.Pred_X_test, 
-                    p = self.p_, 
+                    p = self.p_,
                     type_="pred")
             D_k = self.list_kernels[self.kernel](x = self.input_distance_matrix_test,
                                                  y = self.pred_distance_matrix_test,
@@ -837,6 +849,11 @@ class MixCOBRARegressor(BaseEstimator):
                 fig.update_yaxes(title_text = "Actual target")
                 if show_fig:
                     fig.show()
+                if save_fig:
+                    if fig_path is None:
+                        fig.write_image("qqplot_aggregation.png")
+                    else:
+                        fig.write_image(fig_path)
             else:
                 fig = plt.figure(figsize=(6, 4))
                 plt.plot(y_test, y_test, 'r')
@@ -886,6 +903,11 @@ class MixCOBRARegressor(BaseEstimator):
                         fig.update_yaxes(title_text = "Loss")
                         if show_fig:
                             fig.show()
+                        if save_fig:
+                            if fig_path is None:
+                                fig.write_image("learning_curve.png")
+                            else:
+                                fig.write_image(fig_path)
                     else:
                         plt.figure(figsize=(6, 4))
                         plt.plot(self.bandwidth_list_, self.optimization_outputs['kappa_cv_errors'])
@@ -907,6 +929,11 @@ class MixCOBRARegressor(BaseEstimator):
                                    linestyles='--')
                         if show_fig:
                             plt.show()
+                        if save_fig:
+                            if fig_path is not None:
+                                fig.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            else:
+                                fig.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                 else:
                     if engine == 'plotly':
                         alpha_, beta_, error_ = self.alpha_list_, self.beta_list_, self.optimization_outputs['kappa_cv_errors']
@@ -938,6 +965,11 @@ class MixCOBRARegressor(BaseEstimator):
                                           height = 450)
                         if show_fig:
                             fig.show()
+                        if save_fig:
+                            if fig_path is None:
+                                fig.write_image("learning_curve.png")
+                            else:
+                                fig.write_image(fig_path)
                     else:
                         alpha_, beta_ = np.meshgrid(self.alpha_list_, self.beta_list_)
                         error_ = self.optimization_outputs['kappa_cv_errors']
@@ -964,6 +996,11 @@ class MixCOBRARegressor(BaseEstimator):
                         axs.view_init(30, 120)
                         if show_fig:
                             plt.show()
+                        if save_fig:
+                            if fig_path is not None:
+                                fig.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            else:
+                                fig.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
             else:
                 if self.one_parameter:
                     if engine == 'plotly':
@@ -1020,6 +1057,11 @@ class MixCOBRARegressor(BaseEstimator):
                             fig.add_trace(trace, row=1, col=2)
                         if show_fig:
                             fig.show()
+                        if save_fig:
+                            if fig_path is None:
+                                fig.write_image("learning_curve.png")
+                            else:
+                                fig.write_image(fig_path)
                     else:
                         fig = plt.figure(figsize=(12, 4))
                         ax1 = fig.add_subplot(1,2,1)
@@ -1052,21 +1094,13 @@ class MixCOBRARegressor(BaseEstimator):
                                    xmax=self.optimization_outputs['opt_bandwidth'], 
                                    colors=opt_color, 
                                    linestyles='--')
-                        if save_fig:
-                            if dpi is None:
-                                dpi = 300
-                            if fig_path is None:
-                                plt.savefig("fig_learning_surface.png", 
-                                            format = 'png', 
-                                            dpi=dpi, 
-                                            bbox_inches='tight')
-                            else:
-                                plt.savefig(fig_path, 
-                                            format = 'png', 
-                                            dpi=dpi, 
-                                            bbox_inches='tight')
                         if show_fig:
                             plt.show()
+                        if save_fig:
+                            if fig_path is not None:
+                                fig.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            else:
+                                fig.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                 else:
                     if engine == 'plotly':
                         n = len(self.optimization_outputs['param_collection'][:,0])
@@ -1117,6 +1151,11 @@ class MixCOBRARegressor(BaseEstimator):
                                           height = 450)
                         if show_fig:
                             fig.show()
+                        if save_fig:
+                            if fig_path is None:
+                                fig.write_image("learning_curve.png")
+                            else:
+                                fig.write_image(fig_path)
                     else:
                         n = len(self.optimization_outputs['param_collection'][:,0])
                         fig_n = 20
@@ -1143,11 +1182,9 @@ class MixCOBRARegressor(BaseEstimator):
                         axs.set_zlabel("Kappa cross-validation error")
                         axs.view_init(30, 150)
                         if save_fig:
-                            if dpi is None:
-                                dpi = 300
-                            if fig_path is None:
-                                plt.savefig("fig_learning_surface.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            if fig_path is not None:
+                                fig.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
                             else:
-                                plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
+                                fig.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                         if show_fig:
                             plt.show()

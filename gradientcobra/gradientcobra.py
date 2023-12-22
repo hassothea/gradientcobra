@@ -30,7 +30,7 @@ class GradientCOBRA(BaseEstimator):
                 random_state = None, 
                 learning_rate = 0.01,
                 bandwidth_list = None,
-                speed = 'linear',
+                speed = 'constant',
                 estimator_list = None, 
                 estimator_params = None, 
                 opt_method = "grad",
@@ -40,7 +40,8 @@ class GradientCOBRA(BaseEstimator):
                 kernel_exponent = 1.0,
                 show_progress = True,
                 loss_function = None,
-                loss_weight = None):
+                loss_weight = None,
+                norm_constant = None):
         """
         This is a class of the implementation of the Kernel-based consensual aggregation method for regression by Has (2023).
 
@@ -55,8 +56,8 @@ class GradientCOBRA(BaseEstimator):
                 It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
             
             - `estimator_list`: (default is None) the list of intial estimators (machines as addressed in Biau et al. (2016)). 
-                If it is None, intial estimators: 'knn', 'ridge', 'lasso', 'tree', 'random_forest' and 'svm' are used with default parameters.
-                It should be a sublist of the following list: ['knn', 'ridge', 'lasso', 'tree', 'random_forest', 'svm', 'sgd', 'bayesian_ridge', 'adaboost', 'gradient_boost'].
+                If it is None, intial learners including 'linear_regression', 'ridge', 'lasso', 'tree', and 'random_forest' are used with default parameters.
+                It should be a sublist of the following list: ['linear_regression', 'knn', 'ridge', 'lasso', 'tree', 'random_forest', 'svm', 'sgd', 'bayesian_ridge', 'adaboost', 'gradient_boost'].
 
             - `estimator_params`: (default is `None`) a dictionary containing the parameters of the basic estimators given in the `estimator_list` argument. 
                 It must be a dictionary with:
@@ -93,7 +94,9 @@ class GradientCOBRA(BaseEstimator):
             
             - `loss_weight`: (default is None) a list of size equals to the size of the training data defining the weight for each individual data point in the loss function. 
                 If it is None and the `loss_function = weighted_mse`, then a normalized weight W(i) = 1/PDF(i) is assigned to individual i of the training data.
-
+            
+            - `norm_constant`: (default is None) a normalized constant used to scale the features in optimization algorithm.
+        
         * Returns:
         ---------
             self : returns an instance of self. 
@@ -124,6 +127,7 @@ class GradientCOBRA(BaseEstimator):
         self.kernel_exponent = kernel_exponent
         self.loss_weight = loss_weight
         self.loss_function = loss_function
+        self.norm_constant = norm_constant
 
     # List of kernel functions
     def reverse_cosh(self, x, y):
@@ -190,7 +194,10 @@ class GradientCOBRA(BaseEstimator):
             y = y.astype(np.float64)
         self.X_ = X
         self.y_ = y
-        self.normalize_constant = 10 / np.max(np.abs(y))
+        if self.norm_constant is None:
+            self.normalize_constant = 30 / np.max(np.abs(y))
+        else:
+             self.normalize_constant = self.norm_constant / np.max(np.abs(y))
         self.as_predictions_ = as_predictions
         self.shuffle_input_ = True
         if (X_l is not None) and (y_l is not None):
@@ -206,7 +213,7 @@ class GradientCOBRA(BaseEstimator):
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
-                     'precision' : 10 ** (-10)
+                     'precision' : 10 ** (-7)
         }
 
         if self.bandwidth_list is None:
@@ -670,6 +677,11 @@ class GradientCOBRA(BaseEstimator):
                 fig.update_yaxes(title_text = "Actual target")
                 if show_fig:
                     fig.show()
+                if save_fig:
+                    if fig_path is None:
+                        fig.write_image("qqplot_aggregation.png")
+                    else:
+                        fig.write_image(fig_path)
             else:
                 fig = plt.figure(figsize=(7, 3))
                 plt.plot(y_test, y_test, 'r')
@@ -679,12 +691,10 @@ class GradientCOBRA(BaseEstimator):
                 plt.title('QQ-plot: actual Vs prediction')
                 plt.legend()
                 if save_fig:
-                    if dpi is None:
-                        dpi = 800
-                        if fig_path is not None:
-                            plt.savefig("qqplot_aggregation.png", format = 'png', dpi=dpi, bbox_inches='tight')
-                        else:
-                            plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
+                    if fig_path is None:
+                        plt.savefig("qqplot_aggregation.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                    else:
+                        plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                 if show_fig:
                     plt.show()
         else:
@@ -722,6 +732,11 @@ class GradientCOBRA(BaseEstimator):
                                           height = 650)
                         if show_fig:
                             fig.show()
+                        if save_fig:
+                            if fig_path is None:
+                                fig.write_image("learning_curve.png")
+                            else:
+                                fig.write_image(fig_path)
                     else:
                         num_estimators, bandwidths = np.meshgrid(list(range(1,self.number_estimators+1,1)), self.bandwidth_list_)
                         err = self.optimization_outputs['kappa_cv_errors']
@@ -736,15 +751,13 @@ class GradientCOBRA(BaseEstimator):
                         axs.set_ylabel("number of estimators")
                         axs.set_zlabel("Kappa cross-validation error")
                         axs.view_init(30, 60)
-                        if save_fig:
-                            if dpi is None:
-                                dpi = 800
-                            if fig_path is None:
-                                plt.savefig("fig_learning_surface.png", format = 'png', dpi=dpi, bbox_inches='tight')
-                            else:
-                                plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                         if show_fig:
                             plt.show()
+                        if save_fig:
+                            if fig_path is None:
+                                plt.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            else:
+                                plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                 else:
                     if engine == 'plotly':
                         df_opt = pd.DataFrame({
@@ -783,6 +796,11 @@ class GradientCOBRA(BaseEstimator):
                         fig.update_yaxes(title_text = "Error")
                         if show_fig:
                             fig.show()
+                        if save_fig:
+                            if fig_path is None:
+                                fig.write_image("learning_curve.png")
+                            else:
+                                fig.write_image(fig_path)
                     else:
                         plt.figure(figsize=(7, 3))
                         plt.plot(self.bandwidth_list_, self.optimization_outputs['kappa_cv_errors'])
@@ -792,15 +810,13 @@ class GradientCOBRA(BaseEstimator):
                         plt.scatter(self.optimization_outputs['opt_bandwidth'], self.optimization_outputs['kappa_cv_errors'][self.optimization_outputs['opt_index']], c = 'r')
                         plt.vlines(x=self.optimization_outputs['opt_bandwidth'], ymin=self.optimization_outputs['kappa_cv_errors'][self.optimization_outputs['opt_index']]/5, ymax=self.optimization_outputs['kappa_cv_errors'][self.optimization_outputs['opt_index']], colors='r', linestyles='--')
                         plt.hlines(y=self.optimization_outputs['kappa_cv_errors'][self.optimization_outputs['opt_index']], xmin=0, xmax=self.optimization_outputs['opt_bandwidth'], colors='r', linestyles='--')
-                        if save_fig:
-                            if dpi is None:
-                                dpi = 300
-                            if fig_path is None:
-                                plt.savefig("fig_learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
-                            else:
-                                plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                         if show_fig:
                             plt.show()
+                        if save_fig:
+                            if fig_path is None:
+                                plt.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            else:
+                                plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
             else:
                 if engine == 'plotly':
                     df1 = pd.DataFrame({
@@ -860,7 +876,12 @@ class GradientCOBRA(BaseEstimator):
                     for trace in f2.data:
                         fig.add_trace(trace, row=1, col=2)
                     if show_fig:
-                        fig.show()    
+                        fig.show()   
+                    if save_fig:
+                        if fig_path is None:
+                            fig.write_image("learning_curve.png")
+                        else:
+                            fig.write_image(fig_path) 
                 else:
                     fig = plt.figure(figsize=(10, 3))
                     ax1 = fig.add_subplot(1,2,1)
@@ -881,12 +902,223 @@ class GradientCOBRA(BaseEstimator):
                     ax2.scatter(self.optimization_outputs['opt_bandwidth'], opt_error, c = 'r')
                     ax2.vlines(x=self.optimization_outputs['opt_bandwidth'], ymin=opt_error/5, ymax=opt_error, colors='r', linestyles='--')
                     ax2.hlines(y=opt_error, xmin=0, xmax=self.optimization_outputs['opt_bandwidth'], colors='r', linestyles='--')
-                    if save_fig:
-                        if dpi is None:
-                            dpi = 300
-                        if fig_path is None:
-                            plt.savefig("fig_learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
-                        else:
-                            plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
                     if show_fig:
                         plt.show()
+                    if save_fig:
+                            if fig_path is None:
+                                plt.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
+                            else:
+                                plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
+class KernelSmoother(GradientCOBRA):
+    def __init__(self,
+                random_state = None, 
+                learning_rate = 0.01,
+                bandwidth_list = None,
+                speed = 'constant',
+                opt_method = "grad",
+                max_iter = int(300),
+                opt_params = None,
+                kernel = 'radial', 
+                kernel_exponent = 1.0,
+                show_progress = True,
+                loss_function = None,
+                loss_weight = None,
+                norm_constant = None):
+        """
+        This is a class of the implementation of the Kernel smoother method $y(x)=\sum_{j=0}^{N}W_j(x)y_j$, with weights $W_j(x) >= 0$ and $\sum W_j(x) = 1$.
+
+        * Parameters:
+        ------------
+            - `random_state`: (default is `None`) set the random state of the random generators in the class.
+            
+            - `learning_rate`: (default is `0.01`) the learning rate in gradient descent algorithm for estimating the optimal bandwidth.
+            
+            - `speed`: (default is `constant`) the adjusting speed of the learning rate. It is helpful when the cost function is flate around the optimal value, changing the learning speed might help the algorithm to converge faster.
+                It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
+            
+            - `opt_method`: (default is "grad") optimization algorithm for estimating the bandwidth parameter. 
+                It should be either "grid" (grid search) or "grad" (gradient descent for non-compactly supported kernel). 
+                By default, it is set to be "grad" with default "radial" kernel.
+            
+            - opt_params: (default is 'None') a dictionary of additional parameters for the optimization algorithm (both grid search and gradient descent). 
+                Its should contain some of the following keys:
+                - 'bandwidth_list'  : a list of bandwidth parameters for grid search algorithm (default = np.linspace(0.00001, 10, 300))
+                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-5))
+                - 'n_tries'         : the number of tries for selecting initial position of gradient descent algorithm (default = 5)
+                - 'start'           : the initial value of the bandwidth parameter (default = None)
+                - 'max_iter'        : maximum iteration of gradient descent algorithm (default = 300)
+                - 'n_cv'            : number of cross-validation folds (default = int(5))
+                - 'precision'       : the precision to estimate the gradient for gradient descent algorithm (default = 2 * 10 ** (-5)).
+            
+             - `kernel`: (default is 'radial') the kernel function used for the aggregation. 
+                It should be an element of the list ['exponential', 'gaussian', 'radial', 'cauchy', 'reverse_cosh', 'epanechnikov', 'biweight', 'triweight', 'triangular', 'naive'].
+                Some options such as 'gaussian' and 'radial' lead to the same radial kernel function. 
+                For 'cobra' or 'naive', they correspond to Biau et al. (2016).
+
+            - `kernel_exponent`: (default is 1.0) exponential `alpha` of the exponential and radial kernel function i.e., K(x) = exp(|x|^{\alpha}}). By default, alpha = 2.0,
+
+            - show_progress: (default is `True`) boolean defining whether or not to show the progress of the optimization algorithm for both grid search and gradient descent.
+
+            - `loss_function`: (default is None) a function or string defining the cost function to be optimized for estimating the optimal bandwidth parameter.
+                By defalut, the K-Fold cross-validation MSE is used. Otherwise, it must be either:
+                - a function of two argumetns (y_true, y_pred) or
+                - a string element of the list ['mse', 'mae', 'mape', 'weighted_mse']. If it is `weighted_mse`, one can define the weight for each training point using `loss_weight` argument below.
+            
+            - `loss_weight`: (default is None) a list of size equals to the size of the training data defining the weight for each individual data point in the loss function. 
+                If it is None and the `loss_function = weighted_mse`, then a normalized weight W(i) = 1/PDF(i) is assigned to individual i of the training data.
+
+        * Returns:
+        ---------
+            self : returns an instance of self. 
+
+        * Methods: 
+        ---------
+            - fit : fitting the aggregation method on the design features (original data or predicted features).
+            - split_data : split the data into D_k = {(X_k,y_k)} and D_l = {(X_l,y_l)} to construct the estimators and perform aggregation respectively.
+            - build_basic_estimators : build basic estimators for the aggregation. It is also possible to set the values of (hyper) parameters for each estimators.
+            - load_predictions : to make predictions using constructed basic estimators.
+            - distances : construct distance matrix according to the kernel function used in the aggregation.
+            - kappa_cross_validation_error : the objective function to be minimized.
+            - optimize_bandwidth : the optimization method to estimate the optimal bendwidth parameter.
+            - predict : for building prediction on the new observations using any given bendwidth or the estimated one.
+            - draw_learning_curve : for plotting the graphic of learning algorithm (error vs parameter).
+        """
+        self.random_state = random_state
+        self.learning_rate = learning_rate
+        self.bandwidth_list = bandwidth_list
+        self.speed = speed
+        self.kernel = kernel
+        self.show_progress = show_progress
+        self.opt_method = opt_method
+        self.max_iter = max_iter
+        self.opt_params = opt_params
+        self.kernel_exponent = kernel_exponent
+        self.loss_weight = loss_weight
+        self.loss_function = loss_function
+        self.norm_constant = norm_constant
+
+    # List of kernel functions
+    def reverse_cosh(self, x, y):
+        return 1/np.cosh(x*y) ** self.kernel_exponent
+        
+    def exponential(self, x, y):
+        return np.exp(-y*x ** self.kernel_exponent)
+
+    def radial(self, x, y):
+        return np.exp(-x*y)
+        
+    def epanechnikov(self, x, y):
+        return (1 - x*y) * (x*y < 1)
+        
+    def biweight(self, x, y):
+        return (1-x*y) ** 2 * (x*y < 1)
+        
+    def triweight(self, x, y):
+        return (1-x*y) ** 3 * (x*y < 1)
+        
+    def triangular(self, x, y):
+        return (1-np.abs(x*y)) * (x*y < 1)
+        
+    def cauchy(self, x, y):
+        return 1/(1 + np.array(x*y))
+    
+    # List of loss functions
+    def mse(self, y_true, pred, id = None):
+        return mean_squared_error(y_true, pred)
+    def mae(self, y_true, pred, id = None):
+        return mean_absolute_error(y_true, pred)
+    def mape(self, y_true, pred, id = None):
+        return mean_absolute_percentage_error(y_true, pred)
+    def wgt_mse(self, y_true, pred, id = None):
+        w_err2 = np.dot(self.loss_weight_[id], (y_true - pred) ** 2)/(np.dot(self.loss_weight_[id], y_true) ** 2)
+        return w_err2
+    def loss_func(self, y_true, pred, id = None):
+        return self.loss_function(y_true, pred)
+
+    def fit(self, X, y):
+        '''
+        This method builds basic estimators and performs optimization algorithm to estimate the bandwidth parameter for the aggregation.
+        
+        * Parameters:
+        -------------
+            - `X, y`: the training input and out put.
+        '''
+
+        X, y = check_X_y(X, y)
+        if X.dtype == object:
+            X = X.astype(np.float64)
+        if y.dtype == object:
+            y = y.astype(np.float64)
+        self.X = X
+        if self.norm_constant is None:
+            self.normalize_constant = 20 / np.max(np.abs(X), axis=0)
+        self.y = y
+        opt_param = {'epsilon' : 10 ** (-5),
+                     'n_tries' : int(5),
+                     'start' : None,
+                     'n_cv' : int(5),
+                     'precision' : 10 ** (-10)
+        }
+
+        if self.bandwidth_list is None:
+            self.bandwidth_list_ = np.linspace(0.00001, 10, 300)
+        else:
+            self.bandwidth_list_ = self.bandwidth_list
+        
+        # Set optional parameters
+        if self.opt_params is not None:
+            for obj in self.opt_params:
+                opt_param[obj] = self.opt_params[obj]
+        self.opt_params_ = opt_param
+    
+        self.opt_method_ = self.opt_method
+        if self.kernel not in ['radial', 'gaussian', 'exponential', 'reverse_cosh']:
+            self.opt_method_ = 'grid'
+
+        # Loss function
+        if (self.loss_function is None) or (self.loss_function == 'mse') or (self.loss_function == 'mean_squared_error'):
+            self.loss = self.mse
+        elif (self.loss_function == 'mae') or (self.loss_function == 'mean_absolute_error'):
+            self.loss = self.mae
+        elif (self.loss_function == "mape") or (self.loss_function == 'mean_absolute_percentage_error'):
+            self.loss = self.mape
+        elif (self.loss_function == 'weighted_mse') or (self.loss_function == 'weighted_mean_squared_error'):
+            if self.loss_weight is None:
+                pdf = kde(self.y_)(self.y_)
+                wgt = 1/pdf
+                wgt /= np.sum(wgt)
+                self.loss_weight_ = wgt
+            else:
+                self.loss_weight_ = self.loss_weight
+            self.loss = self.wgt_mse
+
+        if callable(self.loss_function):
+            self.loss = self.loss_func
+        gc = GradientCOBRA(
+            random_state=self.random_state,
+            learning_rate=self.learning_rate,
+            bandwidth_list=self.bandwidth_list,
+            speed=self.speed,
+            opt_method=self.opt_method_,
+            max_iter=self.max_iter,
+            opt_params=self.opt_params_,
+            kernel=self.kernel,
+            kernel_exponent=self.kernel_exponent,
+            show_progress=self.show_progress,
+            loss_function=self.loss_function,
+            loss_weight=self.loss_weight,
+            norm_constant = self.norm_constant
+        )
+        gc_fit = gc.fit(X = self.X,
+                        y = self.y,
+                        as_predictions=True)
+        self.fitted_model = gc_fit
+        self.optimization_outputs = gc_fit.optimization_outputs
+        return self
+
+    def predict(self, X, bandwidth = None):
+        X = check_array(X)
+        res = self.fitted_model.predict(X=X, bandwidth=bandwidth)
+        return res
+    def draw_learning_curve(self, y_test=None, fig_type='qq', save_fig=False, fig_path=None, dpi=None, show_fig=True, engine='plotly'):
+        self.fitted_model.draw_learning_curve(y_test=y_test, fig_type=fig_type, save_fig=save_fig, fig_path=fig_path, dpi=dpi, show_fig=show_fig, engine=engine)
