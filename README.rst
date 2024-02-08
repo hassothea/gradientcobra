@@ -1,8 +1,8 @@
 gradientcobra v1.0.12
 ====================
 
-.. image:: https://github.com/hassothea/gradientcobra/blob/main/gradientcobra_logo.png
-   :width: 150
+.. image:: https://github.com/hassothea/gradientcobra/blob/main/gradientcobra_logo.svg
+   :width: 200
 
 |Python39|
 
