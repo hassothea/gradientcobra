@@ -1,25 +1,26 @@
-gradientcobra v1.0.12
+gradientcobra v1.1.4
 ====================
 
-.. image:: https://github.com/hassothea/gradientcobra/blob/main/gradientcobra_logo.svg
-   :width: 200
+.. image:: https://raw.githubusercontent.com/hassothea/gradientcobra/main/gradientcobra_logo.svg
+  :width: 200
+  :alt: Gradient COBRA Logo
 
-|Python39|
+
+|Python39|  |Python310| 
 
 Introduction
 ------------
 
-``gradientcobra`` is the ``python`` package implementation of Gradient COBRA method by `S. Has (2023) <https://jdssv.org/index.php/jdssv/article/view/70>`__, which is a kernel-based consensual aggregation method for regression problems. 
-It is a regular kernel-based version of ``COBRA`` method by `Biau et al. (2016) <https://www.sciencedirect.com/science/article/pii/S0047259X15000950>`__. 
-We have theoretically shown that the consistency inheritance property also holds for this kernel-based configuration, and the same convergence rate as classical COBRA is achieved.
-Moreoever, gradient descent algorithm is applied to efficiently estimate the bandwidth parameter of the method. This efficiency is illustrated in several numerical experiments on simulated and real datasets.
+``Gradientcobra`` is ``python`` package implementation of Gradient COBRA method by `S. Has (2023) <https://jdssv.org/index.php/jdssv/article/view/70>`__, as well as other aggregation and kernel methods.  
+When the loss function of is smooth enough, gradient descent algorithm can be used to efficiently estimate the bandwidth parameter of the model.
 
-For more information, read the "Documentation and Examples" below.
+For more information, read the "**Documentation and Examples**" below.
 
 Installation
 ------------
 
 In your terminal, run the following command to download and install from PyPI:
+
 
 ``pip install gradientcobra``
 
@@ -39,15 +40,20 @@ If you find ``gradientcobra`` helpful, please consider citing the following papa
 Documentation and Examples
 --------------------------
 
-For more information and how to use the package, read `gradientcobra documentation <https://hassothea.github.io/files/CodesPhD/gradientcobra_doc.html>`__.
+For more information about the library:
 
-Available methods:
+- read: `gradientcobra documentation <https://hassothea.github.io/files/CodesPhD/gradientcobra_doc.html>`__.
 
-- `GradientCOBRA documentation <https://hassothea.github.io/files/CodesPhD/GradientCOBRA.html>`__.
+Read more about aggregation and kernel methods, see:
+
+- `GradientCOBRA documentation <https://hassothea.github.io/files/CodesPhD/gradientcobra.html>`__.
+
 
 - `MixCOBRARegressor documentation <https://hassothea.github.io/files/CodesPhD/mixcobra.html>`__.
 
+
 - `Kernel Smoother documentation <https://hassothea.github.io/files/CodesPhD/kernelsmoother.html>`__.
+
 
 - `Super Learner documentation <https://hassothea.github.io/files/CodesPhD/superlearner.html>`__.
 
@@ -55,7 +61,7 @@ Dependencies
 ------------
 
 -  Python 3.9+
--  numpy, scipy, scikit-learn, matplotlib, pandas, seaborn, plotly
+-  numpy, scipy, scikit-learn, matplotlib, pandas, seaborn, plotly, tqdm
 
 References
 ----------
@@ -72,11 +78,14 @@ References
    Statistical Applications of Genetics and Molecular Biology, 6, article 25.
 -  T.\  Hastie, R. Tibshirani, J. Friedman (2009). Kernel Smoothing Methods.
    The Elements of Statistical Learning. Springer Series in Statistics. Springer, New York, NY.
-
+   
 .. |Travis Status| image:: https://img.shields.io/travis/hassothea/gradientcobra.svg?branch=master
    :target: https://travis-ci.org/hassothea/gradientcobra
 
 .. |Python39| image:: https://img.shields.io/badge/python-3.9-green.svg
+   :target: https://pypi.python.org/pypi/gradientcobra
+
+.. |Python310| image:: https://img.shields.io/badge/python-3.10-blue.svg
    :target: https://pypi.python.org/pypi/gradientcobra
 
 .. |Coverage Status| image:: https://img.shields.io/codecov/c/github/hassothea/gradientcobra.svg
