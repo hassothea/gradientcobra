@@ -34,7 +34,8 @@ setup(name='gradientcobra',
           'scikit-learn>=1.2',
           'matplotlib',
           'seaborn',
-          'plotly>=5.10.0'
+          'plotly>=5.10.0',
+          'tqdm'
 
       ],
       test_suite='tests',
