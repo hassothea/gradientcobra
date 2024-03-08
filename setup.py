@@ -36,7 +36,6 @@ setup(name='gradientcobra',
           'seaborn',
           'plotly>=5.10.0',
           'tqdm'
-
       ],
       test_suite='tests',
       keywords=[
