@@ -536,9 +536,9 @@ class GradientCOBRA(BaseEstimator):
                 r0 = self.learning_rate / abs(grad)        # make the first step exactly equal to `learning-rate`.
                 rate = speed_list[self.speed]              # the learning rate can be varied, and speed defines this change in learning rate.
                 test_threshold = 1.0
-                bw = [bw0]
+                grad_ = grad[0]
                 count = 1
-                pbar = trange(self.max_iter, desc="* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw[0], grad[0], test_threshold), leave=True)
+                pbar = trange(self.max_iter, desc="* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw0, grad_, test_threshold), leave=True)
                 for count in pbar:
                     bw = bw0 - rate(count, r0) * grad
                     if bw < 0 or np.isnan(bw):
@@ -556,7 +556,9 @@ class GradientCOBRA(BaseEstimator):
                     count += 1
                     collect_bw.append(bw[0])
                     gradients.append(grad[0])
-                    pbar.set_description("* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw[0], grad[0], test_threshold))
+                    bw_ = bw[0]
+                    grad_ = grad[0]
+                    pbar.set_description("* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw_, grad_, test_threshold))
                     pbar.refresh()
             else:
                 r0 = self.learning_rate / abs(grad)
@@ -889,7 +891,8 @@ class KernelSmoother(GradientCOBRA):
                 loss_function = None,
                 loss_weight = None,
                 norm_constant = None):
-        """
+        
+        r"""
         This class implements a Kernel Smoother method $y(x)=\sum_{j=0}^{N}W_j(x)y_j$, with weights $W_j(x) >= 0$ and $\sum W_j(x) = 1$.
 
         * Parameters:
