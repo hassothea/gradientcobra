@@ -536,9 +536,8 @@ class GradientCOBRA(BaseEstimator):
                 r0 = self.learning_rate / abs(grad)        # make the first step exactly equal to `learning-rate`.
                 rate = speed_list[self.speed]              # the learning rate can be varied, and speed defines this change in learning rate.
                 test_threshold = 1.0
-                grad_ = grad[0]
                 count = 1
-                pbar = trange(self.max_iter, desc="* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw0, grad_, test_threshold), leave=True)
+                pbar = trange(self.max_iter, desc=f"* GD progress: iter: {count} / bw: {np.round(bw0,3)} / grad: {np.round(grad[0],3)} / stop criter: {np.round(test_threshold,3)} ", leave=True)
                 for count in pbar:
                     bw = bw0 - rate(count, r0) * grad
                     if bw < 0 or np.isnan(bw):
@@ -556,9 +555,7 @@ class GradientCOBRA(BaseEstimator):
                     count += 1
                     collect_bw.append(bw[0])
                     gradients.append(grad[0])
-                    bw_ = bw[0]
-                    grad_ = grad[0]
-                    pbar.set_description("* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw_, grad_, test_threshold))
+                    pbar.set_description(f"* GD progress: iter: {count} / bw: {np.round(bw[0],3)} / grad: {np.round(grad[0],3)} / stop criter: {np.round(test_threshold,3)} ")
                     pbar.refresh()
             else:
                 r0 = self.learning_rate / abs(grad)
