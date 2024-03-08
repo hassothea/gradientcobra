@@ -7,6 +7,7 @@ from sklearn.metrics import mean_squared_error
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
 import logging
+from tqdm import tqdm, trange
 
 # Get the current directory of the test file
 current_dir = os.path.dirname(__file__)
