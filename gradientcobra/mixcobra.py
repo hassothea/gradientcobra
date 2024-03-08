@@ -22,6 +22,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from sklearn.base import BaseEstimator
+from tqdm import tqdm, trange
 
 
 class MixCOBRARegressor(BaseEstimator):
@@ -71,11 +72,11 @@ class MixCOBRARegressor(BaseEstimator):
             
             - `opt_params` : (default is 'None') a dictionary of additional parameters for the optimization algorithm (both grid search and gradient descent). 
                 Its should contain some of the following keys:
-                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-5))
+                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-2))
                 - 'n_tries'         : the number of tries for selecting initial position of gradient descent algorithm (default = 5)
                 - 'start'           : the initial value of the bandwidth parameter (default = None)
                 - 'n_cv'            : number of cross-validation folds (default = int(5))
-                - 'precision'       : the precision to estimate the gradient for gradient descent algorithm (default = 2 * 10 ** (-5)).
+                - 'precision'       : the precision to estimate the gradient for gradient descent algorithm (default = 10 ** (-7)).
             
              - `kernel`: (default is 'radial') the kernel function used for the aggregation. 
                 It should be an element of the list ['exponential', 'gaussian', 'radial', 'cauchy', 'reverse_cosh', 'epanechnikov', 'biweight', 'triweight', 'triangular'].
@@ -205,13 +206,17 @@ class MixCOBRARegressor(BaseEstimator):
         self.X_ = X
         self.y_ = y
         if self.norm_constant_x is None:
-            self.normalize_constant_x = 30 / np.max(np.abs(X), axis=0)
+            self.normalize_constant_x =  5 / (np.max(np.abs(X), axis=0) * X.shape[1])
         else:
-            self.normalize_constant_x = self.norm_constant_x / np.max(np.abs(X), axis=0)
+            self.normalize_constant_x = self.norm_constant_x / (np.max(np.abs(X), axis=0) * X.shape[1])
+        if self.estimator_list is None:
+            M = 6
+        else:
+            M = len(self.estimator_list)
         if self.norm_constant_y is None:
-            self.normalize_constant_y = 30 / np.max(np.abs(y))
+            self.normalize_constant_y = 50 / (np.max(np.abs(y)) * M)
         else:
-            self.normalize_constant_y = self.norm_constant_y / np.max(np.abs(y))
+            self.normalize_constant_y = self.norm_constant_y / (np.max(np.abs(y)) * M)
         self.as_predictions_ = False
         self.shuffle_input_ = True
         if (X_l is not None) and (y_l is not None):
@@ -231,23 +236,23 @@ class MixCOBRARegressor(BaseEstimator):
 
         # Parameter grid
         if self.bandwidth_list is None:
-            self.bandwidth_list_ = np.linspace(0.0001, 10, 100)
+            self.bandwidth_list_ = np.linspace(0.0001, 10, 300)
         else:
             self.bandwidth_list_ = self.bandwidth_list
 
         if self.alpha_list is None:
-            self.alpha_list_ = np.linspace(0.00001, 5, 100)
+            self.alpha_list_ = np.linspace(0.00001, 10, 50)
         else:
             self.alpha_list_ = self.alpha_list
 
         if self.beta_list is None:
-            self.beta_list_ = np.linspace(0.00001, 5, 100)
+            self.beta_list_ = np.linspace(0.00001, 10, 50)
         else:
             self.beta_list_ = self.beta_list
         
         # Optimization parameters
         self.basic_estimtors = {}
-        opt_param = {'epsilon' : 10 ** (-5),
+        opt_param = {'epsilon' : 10 ** (-2),
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
@@ -344,8 +349,9 @@ class MixCOBRARegressor(BaseEstimator):
             estimator_dict = {'linear_regression' : LinearRegression(),
                               'lasso' : LassoCV(random_state=self.random_state),
                               'ridge' : RidgeCV(),
-                              'tree' : DecisionTreeRegressor(random_state=self.random_state),
-                              'random_forest' : RandomForestRegressor(random_state=self.random_state)}
+                              'knn' : KNeighborsRegressor(),
+                              'random_forest' : RandomForestRegressor(random_state=self.random_state),
+                              'svm' : SVR()}
         else:
             for name in self.estimator_list:
                 estimator_dict[name] = all_estimators[name]
@@ -511,28 +517,7 @@ class MixCOBRARegressor(BaseEstimator):
                 n_iter = len(self.bandwidth_list_)
                 errors = np.full(n_iter, np.float32)
                 if self.show_progress:
-                    print('\n\t* Grid search for ONE parameter with '+ str(self.kernel) + ' kernel is in progress...')
-                    m = 1
-                    count = 0
-                    if n_iter <= 50:
-                        n_ = n_iter
-                        print('\t\t~ Full process|', end='')
-                        for p in range(n_iter):
-                            if p < n_iter - 1:
-                                print('-', end='')
-                            else:
-                                print('-|100%')
-                    else:
-                        n_ = 50
-                        print('\t\t~ Full process|--------------------------------------------------|100%')
-                    print('\t\t~   Processing|', end ='')
-                    cut = n_iter // n_
-                    for i in range(n_iter):
-                        if i == m * cut:
-                            print("=", end = '')
-                            if m == n_-1:
-                                print("=|100%")
-                            m += 1
+                    for i in tqdm(range(n_iter), "* 1D-grid search"):
                         errors[i] = self.kappa_cross_validation_error(bandwidth = self.bandwidth_list_[i])
                 else:
                     for i in range(n_iter):
@@ -553,31 +538,8 @@ class MixCOBRARegressor(BaseEstimator):
                 n_iter = len(self.alpha_list_) * len(self.beta_list_)
                 errors = np.full((len(self.alpha_list_), len(self.beta_list_)), np.float32)
                 if self.show_progress:
-                    print('\n\t* Grid search for TWO parameters with '+ str(self.kernel) + ' kernel is in progress...')
-                    m = 1
-                    count = 0
-                    if n_iter <= 50:
-                        n_ = n_iter
-                        print('\t\t~ Full process|', end='')
-                        for p in range(n_iter):
-                            if p < n_iter - 1:
-                                print('-', end='')
-                            else:
-                                print('-|100%')
-                    else:
-                        n_ = 50
-                        print('\t\t~ Full process|--------------------------------------------------|100%')
-                    print('\t\t~   Processing|', end ='')
-                    cut = n_iter // n_
-                    iter = 0
-                    for i in range(len(self.alpha_list_)):
+                    for i in tqdm(range(len(self.alpha_list_)), "* 2D-grid search"):
                         for j in range(len(self.beta_list_)):
-                            if iter == m * cut:
-                                print("=", end = '')
-                                if m == n_ - 1:
-                                    print("=|100%")
-                                m += 1
-                            iter += 1
                             errors[i,j] = self.kappa_cross_validation_error2(alpha=self.alpha_list_[i],
                                                                              beta=self.beta_list_[j])
                 else:
@@ -614,59 +576,54 @@ class MixCOBRARegressor(BaseEstimator):
                 collect_bw = []
                 gradients = []
                 if params['start'] is None:
-                    bws = np.linspace(0.01, 10, num = params['n_tries'])
+                    bws = np.linspace(0.01, 3, num = params['n_tries'])
                     initial_tries = [self.kappa_cross_validation_error(bandwidth=b) for b in bws]
                     bw0 = bws[np.argmin(initial_tries)]
                 else:
                     bw0 = params['start']
                 grad = gradient(self.kappa_cross_validation_error, bw0, params['precision'])
+                grad0 = grad
                 test_threshold = np.Inf
                 if self.show_progress:
-                    print('\n\t* Gradient descent for ONE parameter with '+ str(self.kernel) + ' kernel is implemented...')
-                    print('\t\t~ Initial t = 0:    \t~ bandwidth: %.3f \t~ gradient: %.3f \t ~ threshold: ' %(bw0, grad[0]), end = '')
-                    print(str(params['epsilon']))
                     r0 = self.learning_rate / abs(grad)    
-                    rate = speed_list[self.speed]  
-                    count = 0
-                    grad0 = grad
-                    while count < self.max_iter:
+                    rate = speed_list[self.speed]
+                    count = 1
+                    pbar = trange(self.max_iter, desc="* 1D-GD:  iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw0, grad[0], test_threshold), leave=True)
+                    for count in pbar:
                         bw = bw0 - rate(count, r0) * grad
                         if bw < 0 or np.isnan(bw):
-                            bw = bw * 0.7
+                            bw = bw0 * 0.95
                         if count > 3:
                             if np.sign(grad)*np.sign(grad0) < 0:
-                                r0 = r0 * 0.8
+                                r0 = r0 * 0.9
                             if test_threshold > self.opt_params_['epsilon']:
                                 bw0, grad0 = bw, grad
                             else:
                                 break
-                        relative = abs((bw - bw0) / bw0)
-                        test_threshold = np.mean([relative, abs(grad)])
+                        # relative = abs((bw - bw0) / bw0)
+                        test_threshold = abs(grad) #np.mean([relative, abs(grad)])
                         grad = gradient(self.kappa_cross_validation_error, bw0, params['precision'])
-                        count += 1
-                        print('\t\t~     Iteration: %d \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold), end="\r")
                         collect_bw.append(bw[0])
                         gradients.append(grad[0])
-                    print("                                                                                                                                                                            ", end = '\r')
-                    print('\t\t~    Stopped at: %d \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold))
+                        pbar.set_description("* 1D-GD:  iter: %d / bw: %.3f / grad: %.3f / stop at: %.3f " %(count, bw[0], grad[0], params['epsilon']))
+                        pbar.refresh()
                 else:
                     r0 = self.learning_rate / abs(grad)
                     rate = speed_list[self.speed]
                     count = 0
-                    grad0 = grad
                     while count < self.max_iter:
                         bw = bw0 - rate(count, r0) * grad
                         if bw < 0 or np.isnan(bw):
-                            bw = bw * 0.7
+                            bw = bw0 * 0.95
                         if count > 3:
                             if np.sign(grad)*np.sign(grad0) < 0:
-                                r0 = r0 * 0.8
+                                r0 = r0 * 0.9
                             if test_threshold > params['epsilon']:
                                 bw0, grad0 = bw, grad
                             else:
                                 break
-                        relative = abs((bw - bw0) / bw0)
-                        test_threshold = np.mean([relative, abs(grad)])
+                        # relative = abs((bw - bw0) / bw0)
+                        test_threshold = abs(grad) #np.mean([relative, abs(grad)])
                         grad = gradient(self.kappa_cross_validation_error, bw0, params['precision'])
                         count += 1
                         collect_bw.append(bw[0])
@@ -690,85 +647,80 @@ class MixCOBRARegressor(BaseEstimator):
                 collect_bw = []
                 gradients = []
                 if params['start'] is None:
-                    alpha_ = np.linspace(1, 5, num = params['n_tries'])
-                    beta_ = np.linspace(0.1, 5, num = params['n_tries'])
+                    alpha_ = np.linspace(0.01, 5, num = params['n_tries'])
+                    beta_ = np.linspace(0.01, 5, num = params['n_tries'])
                     initial_tries = [[self.kappa_cross_validation_error2(alpha = a, beta = b) for b in beta_] for a in alpha_]
                     id_ = np.where(initial_tries == np.min(initial_tries))
                     alp0, bet0 = alpha_[id_[0]], beta_[id_[1]]
                 else:
                     alp0, bet0 = params['start'][0], params['start'][1]
                 grad = gradient2(self.kappa_cross_validation_error2, x0=alp0, y0=bet0, eps=params['precision'])
+                grad0 = grad
                 test_threshold = np.Inf
                 if self.show_progress:
-                    print('\n\t* Gradient descent for TWO parameters with '+ str(self.kernel) + ' kernel is implemented...')
-                    print('\t\t~ Initial t = 0:    \t~ (alpha, beta): (%.3f, %.3f) \t~ |gradient|_1: %.3f \t ~ threshold: ' %(alp0, bet0, norm1(grad)), end = '')
-                    print(str(params['epsilon']))
                     r0 = self.learning_rate / norm1(grad)      
                     r1 = r0
                     rate = speed_list[self.speed]  
                     count = 0
-                    grad0 = grad
-                    while count < self.max_iter:
+                    pbar = trange(self.max_iter, desc="* 2D-GD: iter: %d / (a,b): (%.3f,%.3f) / |grad|: %.3f / stop at: %.3f" %(count, alp0, bet0, norm1(grad), params['epsilon']))
+                    for count in pbar:
                         alp, bet = alp0 - rate(count, r0) * grad[0], bet0 - rate(count, r1) * grad[1]
                         if alp < 0 or np.isnan(alp):
-                           alp = alp0 * 0.7
+                           alp = alp0 * 0.95
                         if bet < 0 or np.isnan(bet):
-                            bet = bet0 * 0.7
+                            bet = bet0 * 0.95
                         if count > 3:
                             if np.sign(grad[0])*np.sign(grad0[0]) < 0:
-                                r0 *= 0.8
+                                r0 *= 0.9
                             if np.sign(grad[1])*np.sign(grad0[1]) < 0:
-                                r1 *= 0.8
+                                r1 *= 0.9
                             if test_threshold > params['epsilon']:
                                 alp0, bet0, grad0 = alp, bet, grad
                             else:
                                 break
-                        vec0 = np.array([alp0, bet0])
-                        vec = np.array([alp, bet])
-                        relative = abs(norm1(vec - vec0) / norm1(vec0))
-                        test_threshold = np.mean([relative, norm1(grad)])
+                        test_threshold = norm1(grad)
                         grad = gradient2(self.kappa_cross_validation_error2, x0=alp0, y0=bet0, eps=params['precision'])
-                        count += 1
-                        print('\t\t~     Iteration: %d \t~ (alpha, beta): (%.3f, %.3f) \t~ |gradient|_1: %.3f \t~ stopping criterion: %f' % (count, alp0, bet0, grad[0], test_threshold), end="\r")
                         collect_bw.append([alp0, bet0])
                         gradients.append(grad)
-                    print("                                                                                                                                                                            ", end = '\r')
-                    print('\t\t~    Stopped at: %d \t~ (alpha, beta): (%.3f, %.3f) \t~ |gradient|_1: %.3f \t~ stopping criterion: %f' % (count, alp0, bet0, grad[0], test_threshold))
+                        pbar.set_description("* 2D-GD: iter: %d / (a,b): (%.3f,%.3f) / |grad|: %.3f / stop at: %.3f" %(count, alp0, bet0, norm1(grad), params['epsilon']))
+                        pbar.refresh()
                 else:
                     r0 = self.learning_rate / norm1(grad)        # make the first step exactly equal to `learning-rate`.
                     r1 = r0
                     rate = speed_list[self.speed]            # the learning rate can be varied, and speed defines this change in learning rate.
                     count = 0
-                    grad0 = grad
                     while count < self.max_iter:
                         alp, bet = alp0 - rate(count, r0) * grad[0], bet0 - rate(count, r1) * grad[1]
                         if alp < 0 or np.isnan(alp):
-                            alp = alp0 * 0.7
+                            alp = alp0 * 0.95
                         if bet < 0 or np.isnan(bet):
-                            bet = bet0 * 0.7
+                            bet = bet0 * 0.95
                         if count > 3:
                             if np.sign(grad[0])*np.sign(grad0[0]) < 0:
-                                r0 *= 0.8
+                                r0 *= 0.9
                             if np.sign(grad[1])*np.sign(grad0[1]) < 0:
-                                r1 *= 0.8
+                                r1 *= 0.9
                             if test_threshold > params['epsilon']:
                                 alp0, bet0, grad0 = alp, bet, grad
                             else:
                                 break
-                        vec0 = np.array([alp0, bet0])
-                        vec = np.array([alp, bet])
-                        relative = abs(norm1(vec - vec0) / norm1(vec0))
-                        test_threshold = np.mean([relative, norm1(grad)])
+                        test_threshold = norm1(grad) 
                         grad = gradient2(self.kappa_cross_validation_error2, x0=alp0, y0=bet0, eps=params['precision'])
                         count += 1
                         collect_bw.append([alp0, bet0])
                         gradients.append(grad)
                 opt_risk = self.kappa_cross_validation_error2(alpha=alp0, beta=bet0)
+                if hasattr(alp0, "__len__"):
+                    alp = alp0[0]
+                    bet = bet0[0]
+                else:
+                    alp = alp0
+                    bet = bet0
                 self.optimization_outputs = {
                     'opt_method' : 'grad',
                     'opt_bandwidth' : None,
-                    'opt_alpha' : alp0[0],
-                    'opt_beta' : bet0[0],
+                    'opt_alpha' : alp,
+                    'opt_beta' : bet,
                     'opt_error' : opt_risk,
                     'param_collection' : np.array(collect_bw),
                     'gradients': np.array(gradients)}
@@ -819,7 +771,7 @@ class MixCOBRARegressor(BaseEstimator):
         res[res == 0] = res[res != 0].mean()
         self.test_prediction = res
         return res
-        
+
     def draw_learning_curve(self, 
                             y_test = None,  
                             fig_type = 'qq', 

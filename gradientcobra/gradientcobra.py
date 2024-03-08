@@ -1,4 +1,4 @@
-# --------------- Version 1.0.5 -------------------
+# --------------- Version 1.1.0 -------------------
 # =================================================
 
 # Import all the libraries 
@@ -24,11 +24,12 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from sklearn.base import BaseEstimator
+from tqdm import tqdm, trange
 
 class GradientCOBRA(BaseEstimator):
-    def __init__(self, 
+    def __init__(self,
                 random_state = None, 
-                learning_rate = 0.01,
+                learning_rate = 0.1,
                 bandwidth_list = None,
                 speed = 'constant',
                 estimator_list = None, 
@@ -50,13 +51,15 @@ class GradientCOBRA(BaseEstimator):
         ------------
             - `random_state`: (default is `None`) set the random state of the random generators in the class.
             
-            - `learning_rate`: (default is `0.01`) the learning rate in gradient descent algorithm for estimating the optimal bandwidth.
+            - `learning_rate`: (default is `0.1`) the learning rate in gradient descent algorithm for estimating the optimal bandwidth.
             
-            - `speed`: (default is `constant`) the adjusting speed of the learning rate. It is helpful when the cost function is flate around the optimal value, changing the learning speed might help the algorithm to converge faster.
+            - 'bandwidth_list'  : a list of bandwidth parameters for grid search algorithm (`default = np.linspace(0.00001, 10, 300)`).
+            
+            - `speed`: (default is `constant`) the adjusting speed of the learning rate. It is helpful when the cost function is flat around the optimal value, changing the learning speed might help the algorithm to converge faster.
                 It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
             
             - `estimator_list`: (default is None) the list of intial estimators (machines as addressed in Biau et al. (2016)). 
-                If it is None, intial learners including 'linear_regression', 'ridge', 'lasso', 'tree', and 'random_forest' are used with default parameters.
+                If it is None, intial learners including 'linear_regression', 'ridge', 'lasso', 'knn', 'random_forest' and 'svm' are used with default parameters.
                 It should be a sublist of the following list: ['linear_regression', 'knn', 'ridge', 'lasso', 'tree', 'random_forest', 'svm', 'sgd', 'bayesian_ridge', 'adaboost', 'gradient_boost'].
 
             - `estimator_params`: (default is `None`) a dictionary containing the parameters of the basic estimators given in the `estimator_list` argument. 
@@ -67,19 +70,18 @@ class GradientCOBRA(BaseEstimator):
             - `opt_method`: (default is "grad") optimization algorithm for estimating the bandwidth parameter. 
                 It should be either "grid" (grid search) or "grad" (gradient descent for non-compactly supported kernel). 
                 By default, it is set to be "grad" with default "radial" kernel.
+                
+            - `max_iter`: maximum iteration of gradient descent algorithm (default = 100).
             
             - opt_params: (default is 'None') a dictionary of additional parameters for the optimization algorithm (both grid search and gradient descent). 
                 Its should contain some of the following keys:
-                - 'bandwidth_list'  : a list of bandwidth parameters for grid search algorithm (default = np.linspace(0.00001, 10, 300))
-                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-5))
+                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-2))
                 - 'n_tries'         : the number of tries for selecting initial position of gradient descent algorithm (default = 5)
                 - 'start'           : the initial value of the bandwidth parameter (default = None)
-                - 'max_iter'        : maximum iteration of gradient descent algorithm (default = 300)
                 - 'n_cv'            : number of cross-validation folds (default = int(5))
                 - 'precision'       : the precision to estimate the gradient for gradient descent algorithm (default = 2 * 10 ** (-5)).
             
-             - `kernel`: (default is 'radial') the kernel function used for the aggregation. 
-                It should be an element of the list ['exponential', 'gaussian', 'radial', 'cauchy', 'reverse_cosh', 'epanechnikov', 'biweight', 'triweight', 'triangular', 'cobra', 'naive'].
+             - `kernel`: (default is `'radial'`) the kernel function used for the aggregation. It should be an element of the list ['exponential', 'gaussian', 'radial', 'cauchy', 'reverse_cosh', 'epanechnikov', 'biweight', 'triweight', 'triangular', 'cobra', 'naive'].
                 Some options such as 'gaussian' and 'radial' lead to the same radial kernel function. 
                 For 'cobra' or 'naive', they correspond to Biau et al. (2016).
 
@@ -194,10 +196,14 @@ class GradientCOBRA(BaseEstimator):
             y = y.astype(np.float64)
         self.X_ = X
         self.y_ = y
-        if self.norm_constant is None:
-            self.normalize_constant = 30 / np.max(np.abs(y))
+        if self.estimator_list is None:
+            M = 6
         else:
-             self.normalize_constant = self.norm_constant / np.max(np.abs(y))
+            M = len(self.estimator_list)
+        if self.norm_constant is None:
+            self.normalize_constant = 30 / (np.max(np.abs(y)) * M)
+        else:
+             self.normalize_constant = self.norm_constant / (np.max(np.abs(y))* M)
         self.as_predictions_ = as_predictions
         self.shuffle_input_ = True
         if (X_l is not None) and (y_l is not None):
@@ -209,7 +215,7 @@ class GradientCOBRA(BaseEstimator):
             self.iloc_l = np.array(range(len(self.y_l_)), dtype = np.int64)
         
         self.basic_estimtors = {}
-        opt_param = {'epsilon' : 10 ** (-5),
+        opt_param = {'epsilon' : 1e-2,
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
@@ -316,8 +322,9 @@ class GradientCOBRA(BaseEstimator):
             estimator_dict = {'linear_regression' : LinearRegression(),
                               'lasso' : LassoCV(random_state=self.random_state),
                               'ridge' : RidgeCV(),
-                              'tree' : DecisionTreeRegressor(random_state=self.random_state),
-                              'random_forest' : RandomForestRegressor(random_state=self.random_state)}
+                              'knn' : KNeighborsRegressor(),
+                              'random_forest' : RandomForestRegressor(random_state=self.random_state),
+                              'svm' : SVR()}
         else:
             for name in self.estimator_list:
                 estimator_dict[name] = all_estimators[name]
@@ -440,6 +447,8 @@ class GradientCOBRA(BaseEstimator):
             
         def gradient(f, x0, eps = self.opt_params_['precision']):
             return np.array([(f(x0 + eps) - f(x0 - eps))/(2*eps)])
+        # def gradient(f, x0, eps = self.opt_params_['precision']):
+        #     return np.array([(f(x0 + eps) - f(x0))/eps])
 
         kernel_to_dist = {'naive' : 'naive',
                           'cobra' : 'naive',
@@ -465,36 +474,13 @@ class GradientCOBRA(BaseEstimator):
             self.p_ = 1
         else:
             self.p_ = 0
-        self.distances(self.pred_X_l, 
-                       p = self.p_)
+        self.distances(self.pred_X_l, p = self.p_)
         if self.opt_method_ in ['grid', 'grid_search', 'grid search']:
             n_iter = len(self.bandwidth_list_)
             if self.kernel in ['cobra', 'naive']:
                 errors = np.full((n_iter, self.number_estimators), np.float32)
                 if self.show_progress:
-                    print('\n\t-> Grid search algorithm with '+ str(self.kernel) + ' kernel is in progress...')
-                    m = 1
-                    count = 0
-                    if n_iter <= 50:
-                        n_ = n_iter
-                        print('\t\t~ Full process|', end='')
-                        for p in range(n_iter):
-                            if p < n_iter - 1:
-                                print('-', end='')
-                            else:
-                                print('-|100%')
-                    else:
-                        n_ = 50
-                        print('\t\t~ Full process|--------------------------------------------------|100%')
-                    print('\t\t~   Processing|', end ='')
-                    cut = n_iter // n_
-                    for iter in range(n_iter):
-                        if iter == m * cut:
-                            print("=", end = '')
-                            if m == n_ - 1:
-                                print("=|100%")
-                            m += 1
-                        count += 1
+                    for iter in tqdm(range(n_iter), f"* Grid search progress"):
                         errors[iter,:] = self.kappa_cross_validation_error(bandwidth=self.bandwidth_list_[iter])
                 else:
                     for iter in range(n_iter):
@@ -511,29 +497,7 @@ class GradientCOBRA(BaseEstimator):
             else:
                 errors = np.full(n_iter, np.float32)
                 if self.show_progress:
-                    print('\n\t-> Grid search algorithm with '+ str(self.kernel) + ' kernel is in progress...')
-                    m = 1
-                    count = 0
-                    if n_iter <= 50:
-                        n_ = n_iter
-                        print('\t\t~ Full process|', end='')
-                        for p in range(n_iter):
-                            if p < n_iter - 1:
-                                print('-', end='')
-                            else:
-                                print('-|100%')
-                    else:
-                        n_ = 50
-                        print('\t\t~ Full process|--------------------------------------------------|100%')
-                    print('\t\t~   Processing|', end ='')
-                    cut = n_iter // n_
-                    for iter in range(n_iter):
-                        if iter == m * cut:
-                            print("=", end = '')
-                            if m == n_ - 1:
-                                print("=|100%")
-                            m += 1
-                        count += 1
+                    for iter in tqdm(range(n_iter), f"* Grid search progress"):
                         errors[iter] = self.kappa_cross_validation_error(bandwidth=self.bandwidth_list_[iter])
                 else:
                     for iter in range(n_iter):
@@ -560,41 +524,40 @@ class GradientCOBRA(BaseEstimator):
                 'exp' : lambda x, y: np.exp(x) * y
             }
             if self.opt_params_['start'] is None:
-                bws = np.linspace(0.0001, 10, num = self.opt_params_['n_tries'])
+                bws = np.linspace(0.0001, 3, num = self.opt_params_['n_tries'])
                 initial_tries = [self.kappa_cross_validation_error(bandwidth=b) for b in bws]
                 bw0 = bws[np.argmin(initial_tries)]
             else:
                 bw0 = self.opt_params_['start']
             grad = gradient(self.kappa_cross_validation_error, bw0, self.opt_params_['precision'])
+            grad0 = grad
             test_threshold = np.Inf
             if self.show_progress:
-                print('\n\t* Gradient descent with '+ str(self.kernel) + ' kernel is implemented...')
-                print('\t\t~ Initial t = 0:    \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ threshold: ' %(bw0, grad[0]), end = '')
-                print(str(self.opt_params_['epsilon']))
                 r0 = self.learning_rate / abs(grad)        # make the first step exactly equal to `learning-rate`.
                 rate = speed_list[self.speed]              # the learning rate can be varied, and speed defines this change in learning rate.
-                count = 0
-                grad0 = grad
-                while count < self.max_iter:
+                test_threshold = 1.0
+                bw = [bw0]
+                count = 1
+                pbar = trange(self.max_iter, desc="* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw[0], grad[0], test_threshold), leave=True)
+                for count in pbar:
                     bw = bw0 - rate(count, r0) * grad
                     if bw < 0 or np.isnan(bw):
-                        bw = bw0 * 0.5
+                        bw = bw0 * 0.95
                     if count > 3:
                         if np.sign(grad)*np.sign(grad0) < 0:
-                            r0 = r0 * 0.8
+                            r0 = r0 * 0.99
                         if test_threshold > self.opt_params_['epsilon']:
                             bw0, grad0 = bw, grad
                         else:
                             break
-                    relative = abs((bw - bw0) / bw0)
-                    test_threshold = np.mean([relative, abs(grad)])
+                    # relative = abs((bw - bw0) / bw0)
+                    test_threshold = np.abs(grad) #np.mean([relative, abs(grad)])
                     grad = gradient(self.kappa_cross_validation_error, bw0, self.opt_params_['precision'])
                     count += 1
-                    print('\t\t~     Iteration: %d \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold), end="\r")
                     collect_bw.append(bw[0])
                     gradients.append(grad[0])
-                print("                                                                                                                                                                            ", end = '\r')
-                print('\t\t~    Stopped at: %d \t~ bandwidth: %.3f \t~ gradient: %.3f \t~ stopping criterion: %.3f' % (count, bw[0], grad[0], test_threshold))
+                    pbar.set_description("* GD progress: iter: %d / bw: %.3f / grad: %.3f / stop criter: %.3f " %(count, bw[0], grad[0], test_threshold))
+                    pbar.refresh()
             else:
                 r0 = self.learning_rate / abs(grad)
                 rate = speed_list[self.speed]
@@ -603,16 +566,16 @@ class GradientCOBRA(BaseEstimator):
                 while count < self.max_iter:
                     bw = bw0 - rate(count, r0) * grad
                     if bw < 0 or np.isnan(bw):
-                        bw = bw0 * 0.5
+                        bw = bw0 * 0.95
                     if count > 3:
                         if np.sign(grad)*np.sign(grad0) < 0:
-                            r0 = r0 * 0.8
+                            r0 = r0 * 0.99
                         if test_threshold > self.opt_params_['epsilon']:
                             bw0, grad0 = bw, grad
                         else:
                             break
-                    relative = abs((bw - bw0) / bw0)
-                    test_threshold = np.mean([relative, abs(grad)])
+                    # relative = abs((bw - bw0) / bw0)
+                    test_threshold = np.abs(grad) #np.mean([relative, abs(grad)])
                     grad = gradient(self.kappa_cross_validation_error, bw0, self.opt_params_['precision'])
                     count += 1
                     collect_bw.append(bw[0])
@@ -909,10 +872,12 @@ class GradientCOBRA(BaseEstimator):
                                 plt.savefig("learning_curve.png", format = 'png', dpi=dpi, bbox_inches='tight')
                             else:
                                 plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
+
+
 class KernelSmoother(GradientCOBRA):
     def __init__(self,
                 random_state = None, 
-                learning_rate = 0.01,
+                learning_rate = 0.1,
                 bandwidth_list = None,
                 speed = 'constant',
                 opt_method = "grad",
@@ -925,7 +890,7 @@ class KernelSmoother(GradientCOBRA):
                 loss_weight = None,
                 norm_constant = None):
         """
-        This is a class of the implementation of the Kernel smoother method $y(x)=\sum_{j=0}^{N}W_j(x)y_j$, with weights $W_j(x) >= 0$ and $\sum W_j(x) = 1$.
+        This class implements a Kernel Smoother method $y(x)=\sum_{j=0}^{N}W_j(x)y_j$, with weights $W_j(x) >= 0$ and $\sum W_j(x) = 1$.
 
         * Parameters:
         ------------
@@ -933,20 +898,22 @@ class KernelSmoother(GradientCOBRA):
             
             - `learning_rate`: (default is `0.01`) the learning rate in gradient descent algorithm for estimating the optimal bandwidth.
             
+            - `bandwidth_list`: a list of bandwidth parameters for grid search algorithm (default = np.linspace(0.00001, 10, 300)).
+            
             - `speed`: (default is `constant`) the adjusting speed of the learning rate. It is helpful when the cost function is flate around the optimal value, changing the learning speed might help the algorithm to converge faster.
                 It should be an element of ['constant', 'linear', 'log', 'sqrt_root', 'quad', 'exp'].
             
             - `opt_method`: (default is "grad") optimization algorithm for estimating the bandwidth parameter. 
                 It should be either "grid" (grid search) or "grad" (gradient descent for non-compactly supported kernel). 
                 By default, it is set to be "grad" with default "radial" kernel.
+                
+            - `max_iter`: maximum iteration of gradient descent algorithm (default = 100)
             
             - opt_params: (default is 'None') a dictionary of additional parameters for the optimization algorithm (both grid search and gradient descent). 
                 Its should contain some of the following keys:
-                - 'bandwidth_list'  : a list of bandwidth parameters for grid search algorithm (default = np.linspace(0.00001, 10, 300))
-                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-5))
+                - 'epsilon'         : stopping criterion for gradient descent algorithm (default = 10 ** (-2))
                 - 'n_tries'         : the number of tries for selecting initial position of gradient descent algorithm (default = 5)
                 - 'start'           : the initial value of the bandwidth parameter (default = None)
-                - 'max_iter'        : maximum iteration of gradient descent algorithm (default = 300)
                 - 'n_cv'            : number of cross-validation folds (default = int(5))
                 - 'precision'       : the precision to estimate the gradient for gradient descent algorithm (default = 2 * 10 ** (-5)).
             
@@ -1051,13 +1018,15 @@ class KernelSmoother(GradientCOBRA):
             y = y.astype(np.float64)
         self.X = X
         if self.norm_constant is None:
-            self.normalize_constant = 20 / np.max(np.abs(X), axis=0)
+            self.norm_constant_ = 10 * np.max(np.abs(y))/ np.max(np.max(np.abs(X)))
+        else:
+            self.norm_constant_ = self.norm_constant * np.max(np.abs(y))/ np.max(np.max(np.abs(X)))
         self.y = y
-        opt_param = {'epsilon' : 10 ** (-5),
+        opt_param = {'epsilon' : 1e-2,
                      'n_tries' : int(5),
                      'start' : None,
                      'n_cv' : int(5),
-                     'precision' : 10 ** (-10)
+                     'precision' : 10 ** (-7)
         }
 
         if self.bandwidth_list is None:
@@ -1084,7 +1053,7 @@ class KernelSmoother(GradientCOBRA):
             self.loss = self.mape
         elif (self.loss_function == 'weighted_mse') or (self.loss_function == 'weighted_mean_squared_error'):
             if self.loss_weight is None:
-                pdf = kde(self.y_)(self.y_)
+                pdf = kde(self.y)(self.y)
                 wgt = 1/pdf
                 wgt /= np.sum(wgt)
                 self.loss_weight_ = wgt
@@ -1107,7 +1076,7 @@ class KernelSmoother(GradientCOBRA):
             show_progress=self.show_progress,
             loss_function=self.loss_function,
             loss_weight=self.loss_weight,
-            norm_constant = self.norm_constant
+            norm_constant = self.norm_constant_
         )
         gc_fit = gc.fit(X = self.X,
                         y = self.y,
