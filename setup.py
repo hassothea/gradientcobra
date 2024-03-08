@@ -11,7 +11,7 @@ DESCRIPTION = 'This is the python package for a kernel-based consensual aggregat
 with open('README.rst') as f:
     LONG_DESCRIPTION = f.read()
 
-version = "1.0.10"
+version = "1.1.4"
 setup(name='gradientcobra',
       version=version,
       description='Python implementation for Gradient COBRA by S. Has (2023), and MixCOBRA by A. Fischer and M. Mougeot (2019).',
