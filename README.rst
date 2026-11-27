@@ -1,5 +1,5 @@
-gradientcobra v1.1.13
-====================
+gradientcobra v1.1.14
+=====================
 
 .. image:: https://raw.githubusercontent.com/hassothea/gradientcobra/main/gradientcobra_logo.svg
   :width: 200
