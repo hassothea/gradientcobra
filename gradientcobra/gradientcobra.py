@@ -1103,5 +1103,5 @@ class KernelSmoother(GradientCOBRA):
         X = check_array(X)
         res = self.fitted_model.predict(X=X, bandwidth=bandwidth)
         return res
-    def draw_learning_curve(self, y_test=None, fig_type='qq', save_fig=False, fig_path=None, dpi=None, show_fig=True, engine='plotly', fig_config = self.fig_config):
+    def draw_learning_curve(self, y_test=None, fig_type='qq', save_fig=False, fig_path=None, dpi=None, show_fig=True, engine='plotly', fig_config = None):
         self.fitted_model.draw_learning_curve(y_test=y_test, fig_type=fig_type, save_fig=save_fig, fig_path=fig_path, dpi=dpi, show_fig=show_fig, engine=engine, fig_config=fig_config)
