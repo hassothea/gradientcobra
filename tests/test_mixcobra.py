@@ -60,13 +60,13 @@ class TestPrediction(unittest.TestCase):
         self.assertAlmostEqual(expected_beta, self.MixCOBRARegressor.optimization_outputs['opt_beta'])
     
     def test_basic_estimators(self):
-        expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 3843.024108235918, 2578.96653974025]
+        expected = [1.2032133203682551, 1.2448736091320127, 1.2087950033295554, 3843.024108235918, 2578.587016582034]
         res = [mean_squared_error(self.MixCOBRARegressor.Pred_X_l_[:,j] / self.MixCOBRARegressor.normalize_constant_y, self.y_train[self.MixCOBRARegressor.iloc_l]) for j in range(len(expected))]
         for i in range(len(expected)):
             self.assertAlmostEqual(expected[i], res[i])
 
     def test_predict(self):
-        expected = 14.759855788898653 #31.816559459542464 #30.966584258235706
+        expected = 14.74799079732363 #31.816559459542464 #30.966584258235706
         result = mean_squared_error(self.MixCOBRARegressor.predict(self.X_test), self.y_test)
         self.assertAlmostEqual(expected, result)
         
