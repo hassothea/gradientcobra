@@ -1,38 +1,19 @@
 Metadata-Version: 2.4
 Name: gradientcobra
-Version: 1.1.4
-Summary: Python implementation for Gradient COBRA by S. Has (2023), and MixCOBRA by A. Fischer and M. Mougeot (2019).
+Version: 1.1.14
 Home-page: https://github.com/hassothea/gradientcobra/
 Author: Sothea Has
 Author-email: sothea.has@lpsm.paris
-Keywords: Consensual aggregation,Kernel,Regression,Statistical Aggregation
-Classifier: Development Status :: 4 - Beta
-Classifier: License :: OSI Approved :: MIT License
-Classifier: Programming Language :: Python
-Classifier: Operating System :: Microsoft :: Windows
-Classifier: Intended Audience :: Science/Research
-Classifier: Topic :: Scientific/Engineering
+Requires-Python: >=3.10
+Description-Content-Type: text/x-rst
 License-File: LICENSE
-Requires-Dist: numpy>=1.20.1
-Requires-Dist: pandas>=2.1.0
-Requires-Dist: scipy>=1.10.1
-Requires-Dist: scikit-learn>=1.2
-Requires-Dist: matplotlib
-Requires-Dist: seaborn
-Requires-Dist: plotly>=5.10.0
-Requires-Dist: tqdm
 Dynamic: author
 Dynamic: author-email
-Dynamic: classifier
-Dynamic: description
 Dynamic: home-page
-Dynamic: keywords
 Dynamic: license-file
-Dynamic: requires-dist
-Dynamic: summary
 
-gradientcobra v1.1.7
-====================
+gradientcobra v1.1.14
+=====================
 
 .. image:: https://raw.githubusercontent.com/hassothea/gradientcobra/main/gradientcobra_logo.svg
   :width: 200
