@@ -779,6 +779,7 @@ class MixCOBRARegressor(BaseEstimator):
                             fig_path = None, 
                             show_fig = True, 
                             dpi = 300,
+                            fig_config = None,
                             engine = "plotly"):
         # sns.set()
         opt_color = "#FF0234" # "#21D129"
@@ -851,6 +852,10 @@ class MixCOBRARegressor(BaseEstimator):
                                                 title_text = "Loss vs bandwidths (grid search)", 
                                                 title_x = .5, 
                                                 title_y = 0.9)
+                        if fig_config is not None:
+                            fig.update_layout(
+                                **fig_config
+                            )
                         fig.update_xaxes(title_text = "Bandwidth")
                         fig.update_yaxes(title_text = "Loss")
                         if show_fig:
@@ -915,6 +920,10 @@ class MixCOBRARegressor(BaseEstimator):
                                           title_y = 0.925,
                                           width = 500,
                                           height = 450)
+                        if fig_config is not None:
+                            fig.update_layout(
+                                **fig_config
+                            )
                         if show_fig:
                             fig.show()
                         if save_fig:
@@ -997,6 +1006,10 @@ class MixCOBRARegressor(BaseEstimator):
                                             print_grid=False, 
                                             subplot_titles=("Bandwidth at each gradient descent step", 
                                                             "Loss vs bandwidth"))
+                        if fig_config is not None:
+                            fig.update_layout(
+                                **fig_config
+                            )
                         fig.update_xaxes(title_text="Iteration", row=1, col=1)
                         fig.update_yaxes(title_text="Bandwidth", row=1, col=1)
                         fig.update_xaxes(title_text="Bandwidth", row=1, col=2)
@@ -1101,6 +1114,10 @@ class MixCOBRARegressor(BaseEstimator):
                                           title_y = 0.925,
                                           width = 500,
                                           height = 450)
+                        if fig_config is not None:
+                            fig.update_layout(
+                                **fig_config
+                            )
                         if show_fig:
                             fig.show()
                         if save_fig:

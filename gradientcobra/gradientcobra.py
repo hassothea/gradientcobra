@@ -705,7 +705,7 @@ class GradientCOBRA(BaseEstimator):
                                 fig.write_image("learning_curve.png")
                             else:
                                 fig.write_image(fig_path)
-                        return fig
+                        
                     else:
                         num_estimators, bandwidths = np.meshgrid(list(range(1,self.number_estimators+1,1)), self.bandwidth_list_)
                         err = self.optimization_outputs['kappa_cv_errors']
@@ -774,7 +774,7 @@ class GradientCOBRA(BaseEstimator):
                                 fig.write_image("learning_curve.png")
                             else:
                                 fig.write_image(fig_path)
-                        return fig
+                        
                     else:
                         plt.figure(figsize=(7, 3))
                         plt.plot(self.bandwidth_list_, self.optimization_outputs['kappa_cv_errors'])
@@ -856,7 +856,7 @@ class GradientCOBRA(BaseEstimator):
                             fig.write_image("learning_curve.png")
                         else:
                             fig.write_image(fig_path) 
-                    return fig
+                
                 else:
                     fig = plt.figure(figsize=(10, 3))
                     ax1 = fig.add_subplot(1,2,1)
@@ -899,8 +899,7 @@ class KernelSmoother(GradientCOBRA):
                 show_progress = True,
                 loss_function = None,
                 loss_weight = None,
-                norm_constant = None,
-                fig_config = None):
+                norm_constant = None):
         
         r"""
         This class implements a Kernel Smoother method $y(x)=\sum_{j=0}^{N}W_j(x)y_j$, with weights $W_j(x) >= 0$ and $\sum W_j(x) = 1$.
@@ -976,7 +975,6 @@ class KernelSmoother(GradientCOBRA):
         self.loss_weight = loss_weight
         self.loss_function = loss_function
         self.norm_constant = norm_constant
-        self.fig_config = fig_config
 
     # List of kernel functions
     def reverse_cosh(self, x, y):
