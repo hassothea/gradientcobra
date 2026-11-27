@@ -435,8 +435,7 @@ class SuperLearner(BaseEstimator):
             df = pd.DataFrame({
                 'y_test' : y_test,
                 'y_pred' : self.test_prediction})
-            fig = go.Figure(data = px.line(df, 
-                                               x = "y_test", 
+            fig = go.Figure(data = px.line(df, x = "y_test", 
                                                y = "y_test", 
                                                color_discrete_sequence=['red']).data + px.scatter(df, x = "y_pred", 
                                                                                                   y = "y_test").data)

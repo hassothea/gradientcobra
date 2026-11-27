@@ -619,17 +619,19 @@ class GradientCOBRA(BaseEstimator):
                             fig_path = None, 
                             dpi = None, 
                             show_fig = True,
-                            engine = 'plotly'):
+                            engine = 'plotly',
+                            fig_config = None):
         if (y_test is not None) and (fig_type in ['qq', 'qq-plot', 'qqplot', 'QQ-plot', 'QQplot']):
             if engine == 'plotly':
                 df = pd.DataFrame({
                 'y_test' : y_test,
                 'y_pred' : self.test_prediction})
-                fig = go.Figure(data = px.line(df, 
-                                               x = "y_test", 
-                                               y = "y_test", 
-                                               color_discrete_sequence=['red']).data + px.scatter(df, x = "y_pred", 
-                                                                                                  y = "y_test").data)
+                fig = go.Figure(
+                    data = (px.line(df, 
+                                x = "y_test", 
+                                y = "y_test", 
+                                color_discrete_sequence=['red']).data) + (px.scatter(df, x = "y_pred", 
+                                y = "y_test").data))
                 fig = fig.update_layout(width = 700, 
                                         height = 650, 
                                         title_text = "QQplot of predicted and actual target", 
@@ -690,8 +692,12 @@ class GradientCOBRA(BaseEstimator):
                                           title_text = "Errors vs parameters with "+ str(self.kernel) + " kernel", 
                                           title_x = .5, 
                                           title_y = 0.925,
-                                          width = 700,
-                                          height = 650)
+                                          width = 500,
+                                          height = 400)
+                        if fig_config:
+                            fig.update_layout(
+                                    **fig_config
+                                )
                         if show_fig:
                             fig.show()
                         if save_fig:
@@ -699,6 +705,7 @@ class GradientCOBRA(BaseEstimator):
                                 fig.write_image("learning_curve.png")
                             else:
                                 fig.write_image(fig_path)
+                        return fig
                     else:
                         num_estimators, bandwidths = np.meshgrid(list(range(1,self.number_estimators+1,1)), self.bandwidth_list_)
                         err = self.optimization_outputs['kappa_cv_errors']
@@ -754,6 +761,10 @@ class GradientCOBRA(BaseEstimator):
                                                 title_text = "Errors vs bandwidths (grid search)", 
                                                 title_x = .5, 
                                                 title_y = 0.925)
+                        if fig_config:
+                            fig.update_layout(
+                                **fig_config
+                            )
                         fig.update_xaxes(title_text = "Bandwidth")
                         fig.update_yaxes(title_text = "Error")
                         if show_fig:
@@ -763,6 +774,7 @@ class GradientCOBRA(BaseEstimator):
                                 fig.write_image("learning_curve.png")
                             else:
                                 fig.write_image(fig_path)
+                        return fig
                     else:
                         plt.figure(figsize=(7, 3))
                         plt.plot(self.bandwidth_list_, self.optimization_outputs['kappa_cv_errors'])
@@ -844,6 +856,7 @@ class GradientCOBRA(BaseEstimator):
                             fig.write_image("learning_curve.png")
                         else:
                             fig.write_image(fig_path) 
+                    return fig
                 else:
                     fig = plt.figure(figsize=(10, 3))
                     ax1 = fig.add_subplot(1,2,1)
@@ -872,7 +885,6 @@ class GradientCOBRA(BaseEstimator):
                             else:
                                 plt.savefig(fig_path, format = 'png', dpi=dpi, bbox_inches='tight')
 
-
 class KernelSmoother(GradientCOBRA):
     def __init__(self,
                 random_state = None, 
@@ -887,7 +899,8 @@ class KernelSmoother(GradientCOBRA):
                 show_progress = True,
                 loss_function = None,
                 loss_weight = None,
-                norm_constant = None):
+                norm_constant = None,
+                fig_config = None):
         
         r"""
         This class implements a Kernel Smoother method $y(x)=\sum_{j=0}^{N}W_j(x)y_j$, with weights $W_j(x) >= 0$ and $\sum W_j(x) = 1$.
@@ -963,6 +976,7 @@ class KernelSmoother(GradientCOBRA):
         self.loss_weight = loss_weight
         self.loss_function = loss_function
         self.norm_constant = norm_constant
+        self.fig_config = fig_config
 
     # List of kernel functions
     def reverse_cosh(self, x, y):
@@ -1089,5 +1103,5 @@ class KernelSmoother(GradientCOBRA):
         X = check_array(X)
         res = self.fitted_model.predict(X=X, bandwidth=bandwidth)
         return res
-    def draw_learning_curve(self, y_test=None, fig_type='qq', save_fig=False, fig_path=None, dpi=None, show_fig=True, engine='plotly'):
-        self.fitted_model.draw_learning_curve(y_test=y_test, fig_type=fig_type, save_fig=save_fig, fig_path=fig_path, dpi=dpi, show_fig=show_fig, engine=engine)
+    def draw_learning_curve(self, y_test=None, fig_type='qq', save_fig=False, fig_path=None, dpi=None, show_fig=True, engine='plotly', fig_config = self.fig_config):
+        self.fitted_model.draw_learning_curve(y_test=y_test, fig_type=fig_type, save_fig=save_fig, fig_path=fig_path, dpi=dpi, show_fig=show_fig, engine=engine, fig_config=fig_config)
