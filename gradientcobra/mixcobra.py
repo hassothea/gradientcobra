@@ -435,14 +435,14 @@ class MixCOBRARegressor(BaseEstimator):
                 y = 0,
                 al = bandwidth)
             D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
-            D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.Inf
+            D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.inf
             res = np.matmul(self.y_l_[self.shuffled_index_cv != i], D_k)/D_k_
             res[np.isnan(res)] = 0
             temp = self.loss(self.y_l_[self.shuffled_index_cv == i], 
                              res, 
                              id = self.iloc_l[self.shuffled_index_cv == i])
             if np.isnan(temp):
-                cost[i] = np.Inf
+                cost[i] = np.inf
             else:
                 cost[i] = temp
         return cost.mean()
@@ -458,14 +458,14 @@ class MixCOBRARegressor(BaseEstimator):
                 al = alpha,
                 be = beta)
             D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
-            D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.Inf
+            D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.inf
             res = np.matmul(self.y_l_[self.shuffled_index_cv != i], D_k)/D_k_
             res[np.isnan(res)] = 0
             temp = self.loss(self.y_l_[self.shuffled_index_cv == i],
                              res, 
                              id = self.iloc_l[self.shuffled_index_cv == i])
             if np.isnan(temp):
-                cost[i] = np.Inf
+                cost[i] = np.inf
             else:
                 cost[i] = temp
         return cost.mean()
@@ -583,7 +583,7 @@ class MixCOBRARegressor(BaseEstimator):
                     bw0 = params['start']
                 grad = gradient(self.kappa_cross_validation_error, bw0, params['precision'])
                 grad0 = grad
-                test_threshold = np.Inf
+                test_threshold = np.inf
                 if self.show_progress:
                     r0 = self.learning_rate / abs(grad)    
                     rate = speed_list[self.speed]
@@ -656,7 +656,7 @@ class MixCOBRARegressor(BaseEstimator):
                     alp0, bet0 = params['start'][0], params['start'][1]
                 grad = gradient2(self.kappa_cross_validation_error2, x0=alp0, y0=bet0, eps=params['precision'])
                 grad0 = grad
-                test_threshold = np.Inf
+                test_threshold = np.inf
                 if self.show_progress:
                     r0 = self.learning_rate / norm1(grad)      
                     r1 = r0
@@ -766,7 +766,7 @@ class MixCOBRARegressor(BaseEstimator):
                                                  al = alpha,
                                                  be = beta)
         D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
-        D_k_[D_k_ == 0] = np.Inf
+        D_k_[D_k_ == 0] = np.inf
         res = np.matmul(self.y_l_, D_k)/D_k_
         res[res == 0] = res[res != 0].mean()
         self.test_prediction = res

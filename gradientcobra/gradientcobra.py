@@ -415,7 +415,7 @@ class GradientCOBRA(BaseEstimator):
                 for i in range(self.opt_params_['n_cv']):
                     D_k = 1*(list_kernels[self.kernel](self.distance_matrix[self.shuffled_index_cv != i,:][:,self.shuffled_index_cv == i], bandwidth) < ratio)
                     D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
-                    D_k_[D_k_ == 0 | np.isnan(D_k_)] = np.Inf
+                    D_k_[D_k_ == 0 | np.isnan(D_k_)] = np.inf
                     res = np.matmul(self.y_l_[self.shuffled_index_cv != i], D_k)/D_k_
                     res[np.isnan(res)] = 0
                     cost[i, m-1] = self.loss(self.y_l_[self.shuffled_index_cv == i], res, id = self.iloc_l[self.shuffled_index_cv == i])
@@ -425,12 +425,12 @@ class GradientCOBRA(BaseEstimator):
             for i in range(self.opt_params_['n_cv']):
                 D_k = list_kernels[self.kernel](self.distance_matrix[self.shuffled_index_cv != i,:][:,self.shuffled_index_cv == i], bandwidth)
                 D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
-                D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.Inf
+                D_k_[(D_k_ == 0) | np.isnan(D_k_)] = np.inf
                 res = np.matmul(self.y_l_[self.shuffled_index_cv != i], D_k)/D_k_
                 res[np.isnan(res)] = 0
                 temp = self.loss(self.y_l_[self.shuffled_index_cv == i], res, id = self.iloc_l[self.shuffled_index_cv == i])
                 if np.isnan(temp):
-                    cost[i] = np.Inf
+                    cost[i] = np.inf
                 else:
                     cost[i] = temp
             cost_ = cost.mean()
@@ -531,7 +531,7 @@ class GradientCOBRA(BaseEstimator):
                 bw0 = self.opt_params_['start']
             grad = gradient(self.kappa_cross_validation_error, bw0, self.opt_params_['precision'])
             grad0 = grad
-            test_threshold = np.Inf
+            test_threshold = np.inf
             if self.show_progress:
                 r0 = self.learning_rate / abs(grad)        # make the first step exactly equal to `learning-rate`.
                 rate = speed_list[self.speed]              # the learning rate can be varied, and speed defines this change in learning rate.
@@ -606,7 +606,7 @@ class GradientCOBRA(BaseEstimator):
         else:
             D_k = self.list_kernels[self.kernel](self.distance_matrix_test, bandwidth)
         D_k_ = np.sum(D_k, axis=0, dtype=np.float32)
-        D_k_[D_k_ == 0] = np.Inf
+        D_k_[D_k_ == 0] = np.inf
         res = np.matmul(self.y_l_, D_k)/D_k_
         res[res == 0] = res[res != 0].mean()
         self.test_prediction = res
