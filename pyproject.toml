@@ -1,3 +1,4 @@
+
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -5,5 +6,43 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gradientcobra"
 version = "1.1.14"
+description = "Python implementation for Gradient COBRA by S. Has (2023), and MixCOBRA by A. Fischer and M. Mougeot (2019)."
 readme = "README.rst"
 requires-python = ">=3.10"
+
+authors = [
+    { name = "Sothea Has", email = "sothea.has@lpsm.paris" }
+]
+
+keywords = [
+    "Consensual aggregation",
+    "Kernel",
+    "Regression",
+    "Statistical Aggregation"
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Operating System :: Microsoft :: Windows",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering"
+]
+
+dependencies = [
+    "numpy>=1.20.1",
+    "pandas>=2.1.0",
+    "scipy>=1.10.1",
+    "scikit-learn>=1.2",
+    "matplotlib",
+    "seaborn",
+    "plotly>=5.10.0",
+    "tqdm"
+]
+
+[project.urls]
+Homepage = "https://github.com/hassothea/gradientcobra/"
+
+[tool.setuptools]
+packages = ["gradientcobra"]
